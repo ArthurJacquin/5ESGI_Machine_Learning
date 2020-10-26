@@ -26,3 +26,6 @@
 *.exe
 *.out
 *.app
+
+MlDll/TestMLDLL/x64/
+MlDll/MlDll/x64/

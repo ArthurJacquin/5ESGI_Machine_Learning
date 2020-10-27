@@ -64,14 +64,14 @@ extern "C" {
 			double Y = all_expected_outputs[k]; //Recup du resultat souhaité
 			
 			double p = predict_linear_model_classification(model, X, input_count); //Prediction du résultat
-
+			
 			//Mise à jour des poids
+			model[0] = model[0] + learning_rate * (Y - p);
 			for (size_t i = 0; i < input_count; i++)
 			{
-				if(it > 9990)
-					std::cout << "k : " << k << " | Y : " << Y << " | p : " << p << " | X[i] : " << X[i] << " = " << learning_rate * (Y - p) * X[i] << std::endl;
+				//std::cout << "k : " << k << " | Y : " << Y << " | p : " << p << " | X[i] : " << X[i] << " = " << learning_rate * (Y - p) * X[i] << std::endl;
 
-				model[i + 1] += learning_rate * (Y - p) * X[i];
+				model[i + 1] = model[i + 1] + learning_rate * (Y - p) * X[i];
 			}
 		}
 

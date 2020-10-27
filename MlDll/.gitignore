@@ -29,3 +29,5 @@
 
 MlDll/TestMLDLL/x64/
 MlDll/MlDll/x64/
+x64/
+mlDll/.vs/

@@ -3,6 +3,7 @@
 
 extern "C"
 {
+    //------------------------Modèle linéaire----------------------------------------
     __declspec(dllimport) double* create_linear_model(int inputs_count);
     __declspec(dllimport) double predict_linear_model_classification(double* model, double inputs[], int sample_count);
     __declspec(dllimport) void train_linear_model_Rosenblatt(double* model, double all_samples[], int sample_count, int input_count,

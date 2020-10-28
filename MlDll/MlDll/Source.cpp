@@ -2,12 +2,22 @@
 #include <iostream>
 #include <time.h>
 
+/// <summary>
+/// input = neurones en entrée du perceptron
+/// sample = database à tester
+/// </summary>
+
+/// <summary>
+/// sigmoid
+/// </summary>
 double Sign(double x)
 {
 	return 1 / (1 + exp(-x));
 }
 
 extern "C" {
+
+	//--------------------------------------Modèle linéaire-----------------------------------
 
 	/// <summary>
 	/// init des poids random
@@ -23,6 +33,9 @@ extern "C" {
 		return weights;
 	}
 
+	/// <summary>
+	/// prédit un output 
+	/// </summary>
 	__declspec(dllexport) double predict_linear_model_classification(double* model, double samples[], int input_count) {
 		
 		double sum = model[0]; //poids du biais
@@ -40,18 +53,12 @@ extern "C" {
 		return 1.0;
 	}
 
-	__declspec(dllexport) double* predict_linear_model_multiclass_classification(double* model, double samples[], int sample_count,
-		int class_count) {
-		// TODO
-		return new double[3] {1.0, -1.0, 1.0};
-	}
-
 	__declspec(dllexport) void train_linear_model_Rosenblatt(double* model, double all_samples[], int sample_count, int input_count,
 		double all_expected_outputs[], int epochs, double learning_rate) {
 		
 		srand(time(NULL));
 
-		//Repeter N fois
+		//Repeter epochs fois
 		for (size_t it = 0; it < epochs; it++)
 		{
 			int k = rand() % (sample_count); //Choix d'un indice random
@@ -81,4 +88,12 @@ extern "C" {
 	__declspec(dllexport) void delete_linear_model(double* model) {
 		delete[] model;
 	}
+
+	//-------------------------------------------------PMC--------------------------------------------
+	__declspec(dllexport) double* predict_linear_model_multiclass_classification(double* model, double samples[], int sample_count,
+		int class_count) {
+		// TODO
+		return new double[3] {1.0, -1.0, 1.0};
+	}
+
 }

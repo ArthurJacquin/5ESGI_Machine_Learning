@@ -1,6 +1,7 @@
 #include <cstdlib>
 #include <iostream>
 #include <time.h>
+#include <vector>
 
 /// <summary>
 /// input = neurones en entrée du perceptron
@@ -14,6 +15,15 @@ double Sign(double x)
 {
 	return 1 / (1 + exp(-x));
 }
+
+struct MLP
+{
+	std::vector<int> d;
+	int L;
+	std::vector<std::vector<std::vector<double>>> w;
+	std::vector<std::vector<double>> x;
+	std::vector< std::vector<double>> deltas;
+};
 
 extern "C" {
 
@@ -99,5 +109,35 @@ extern "C" {
 	__declspec(dllexport) void delete_pmc_model(double* model)
 	{
 		delete[] model;
+	}
+
+	__declspec(dllexport) void forward_pass(MLP* model, double inputs[], bool isClassification)
+	{
+		for (int j = 0; j < model->d[0]; ++j)
+		{
+			model->x[0][j + 1] = inputs[j];
+		}
+
+		for (int l = 1; l < model->L + 1; ++l)
+		{
+			for (int j = 1; j < model->d[l] + 1; ++j)
+			{
+				double sum = 0.0;
+
+				for (int i = 0; i < model->d[l - 1] + 1; ++i)
+				{
+					sum += model->x[l - 1][i] * model->w[l][i][j];
+				}
+
+				if (l == model->L && !isClassification)
+				{
+					model->x[l][j] = sum;
+				}
+				else
+				{
+					model->x[l][j] = tanh(sum);
+				}
+			}
+		}
 	}
 }

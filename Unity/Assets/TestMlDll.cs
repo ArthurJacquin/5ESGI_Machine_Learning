@@ -26,8 +26,7 @@ public class TestMlDll : MonoBehaviour
             Debug.Log(rslt);
         }
         
-        MlDllWrapper.DeleteLinearModel(result);
-        
+        MlDllWrapper.DeleteLinearModel(result); 
         MlDllWrapper.DeleteLinearModel(model);
     }
 }

@@ -1,11 +1,9 @@
-﻿
-using System.Runtime.InteropServices;
+﻿using System.Runtime.InteropServices;
 
 public static class MlDllWrapper
 {
     [DllImport("MlDll", EntryPoint = "my_add")]
     public static extern double MyAdd(double a, double b);
-
 
     //--------------------------------------Modèle linéaire-----------------------------------
     [DllImport("MlDll", EntryPoint = "create_linear_model")]
@@ -21,8 +19,6 @@ public static class MlDllWrapper
 
     [DllImport("MlDll", EntryPoint = "delete_linear_model")]
     public static extern void DeleteLinearModel(System.IntPtr model);
-
-
 
     //-------------------------------------------------PMC--------------------------------------------
     [DllImport("MlDll", EntryPoint = "create_pmc_model")]

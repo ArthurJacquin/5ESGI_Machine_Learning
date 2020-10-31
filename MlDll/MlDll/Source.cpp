@@ -22,7 +22,7 @@ struct MLP
 	int L;
 	std::vector<std::vector<std::vector<double>>> w;
 	std::vector<std::vector<double>> x;
-	std::vector< std::vector<double>> deltas;
+	std::vector<std::vector<double>> deltas;
 };
 
 extern "C" {
@@ -111,6 +111,65 @@ extern "C" {
 		delete[] model;
 	}
 
+	__declspec(dllexport) MLP* create_pmc_model(int npl[], int size) {
+		auto mlp = new MLP;
+
+		for (int i = 0; i < size; ++i)
+		{
+			mlp->d.emplace_back(npl[i]);
+		}
+
+		mlp->L = size - 1;
+
+		for (int l = 0; l < size; ++l)
+		{
+			if (l == 0)
+			{
+			}
+			else
+			{
+				for (int i = 0; i < npl[l - 1] + 1; ++i)
+				{
+					for (int j = 0; j < npl[l] + 1; ++j)
+					{
+					}
+				}
+			}
+		}
+
+		for (int l = 0; l < size; ++l)
+		{
+			for (int j = 0; j < npl[l] + 1; ++j)
+			{
+				if (j > 0)
+				{
+					mlp->x.emplace_back(0.0);
+				}
+				else
+				{
+					mlp->x.emplace_back(1.0);
+				}
+			}
+		}
+
+		for (int l = 0; l < size; ++l)
+		{
+			for (int j = 0; j < npl[l] + 1; ++j)
+			{
+				if (j > 0)
+				{
+					mlp->deltas.emplace_back(0.0);
+				}
+				else
+				{
+					mlp->deltas.emplace_back(1.0);
+				}
+			}
+		}
+
+		return mlp;
+	}
+
 	__declspec(dllexport) void forward_pass(MLP* model, double inputs[], bool isClassification)
 	{
 		for (int j = 0; j < model->d[0]; ++j)
@@ -138,6 +197,32 @@ extern "C" {
 					model->x[l][j] = tanh(sum);
 				}
 			}
+		}
+	}
+
+	__declspec(dllexport) double* predict(MLP* model, double inputs[])
+	{
+		forward_pass(model, inputs, true);
+
+		double* m = new double[model->x[model->L].size()];
+
+		for (int i = 1; i < model->x[model->L].size(); ++i)
+		{
+			m[i] = model->x[model->L][i];
+		}
+
+		return m;
+	}
+
+	__declspec(dllexport) void train(MLP* model, double allInputs[], double allExpectedOutputs[],
+		bool isClassification, int sampleCount, int epochs, double alpha)
+	{
+		int inputsSize = model->d[0];
+		int outputsSize = model->d[model->L];
+
+		for (int it = 0; it < epochs; ++it)
+		{
+			int k = rand() % sampleCount - 1 + 0;
 		}
 	}
 }

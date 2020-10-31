@@ -96,4 +96,8 @@ extern "C" {
 		return new double[3] {1.0, -1.0, 1.0};
 	}
 
+	__declspec(dllexport) void delete_pmc_model(double* model)
+	{
+		delete[] model;
+	}
 }

@@ -11,7 +11,6 @@ CasTest::CasTest(TestType t)
 		sample_count = 3;
 		samples = new double[sample_count * 2]{ 1.0, 1.0, 2.0, 3.0, 3.0, 3.0 };
 		outputs = new double[sample_count] { 1, -1, -1 };
-
 		break;
 
 	case LinearMultiple:
@@ -42,28 +41,42 @@ CasTest::CasTest(TestType t)
 		break;
 
 	case Cross:
-
 		break;
+
 	case MultiLinear:
-
 		break;
+
 	case MultiCross:
-
 		break;
+
 	case LinearSimple2D:
-
+		sample_count = 2;
+		samples = new double[sample_count * 2]{ 1.0, 2.0 };
+		outputs = new double[sample_count] { 2, 3 };
 		break;
+
 	case NonLinearSimple2D:
-
+		sample_count = 3;
+		samples = new double[sample_count * 2]{ 1.0, 2.0, 3.0 };
+		outputs = new double[sample_count] { 2, 3, 2.5 };
 		break;
+
 	case LinearSimple3D:
-
+		sample_count = 3;
+		samples = new double[sample_count * 2]{ 1.0, 1.0, 2.0, 2.0, 3.0, 1.0 };
+		outputs = new double[sample_count] { 2, 3, 2.5 };
 		break;
+
 	case LinearTricky3D:
-
+		sample_count = 3;
+		samples = new double[sample_count * 2]{ 1.0, 1.0, 2.0, 2.0, 3.0, 3.0 };
+		outputs = new double[sample_count] { 1, 2, 3 };
 		break;
-	case NonLinearSimple3D:
 
+	case NonLinearSimple3D:
+		sample_count = 4;
+		samples = new double[sample_count * 2]{ 1.0, 0.0, 0.0, 1.0, 1.0, 1.0, 0.0, 0.0 };
+		outputs = new double[sample_count] { 2, 1, -2, -1 };
 		break;
 
 	default:

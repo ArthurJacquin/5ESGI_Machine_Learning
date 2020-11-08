@@ -2,6 +2,7 @@
 #include <iostream>
 #include <time.h>
 #include <vector>
+#include "MLP.h"
 
 /// <summary>
 /// input = neurones en entrée du perceptron
@@ -16,19 +17,9 @@ double Sign(double x)
 	return 1 / (1 + exp(-x));
 }
 
-struct MLP
-{
-	std::vector<int> d;
-	int L;
-	std::vector<std::vector<std::vector<double>>> w;
-	std::vector<std::vector<double>> x;
-	std::vector<std::vector<double>> deltas;
-};
-
 extern "C" {
 
 	//--------------------------------------Modèle linéaire-----------------------------------
-
 	/// <summary>
 	/// init des poids random
 	/// </summary>
@@ -95,126 +86,86 @@ extern "C" {
 		return;
 	}
 
-	__declspec(dllexport) void delete_linear_model(double* model) {
+	__declspec(dllexport) void delete_model(double* model) {
 		delete[] model;
 	}
 
-	//-------------------------------------------------PMC--------------------------------------------
-	__declspec(dllexport) double* predict_linear_model_multiclass_classification(double* model, double samples[], int sample_count,
-		int class_count) {
-		// TODO
-		return new double[3] {1.0, -1.0, 1.0};
+	//--------------------------------------MLP-------------------------------------------------
+	__declspec(dllexport) double* create_MLP_model(int dims[], int layer_count) {
+		
+		//Nombre total de poids
+		int nbWeight = 0;
+		for (size_t l = 1; l < layer_count + 1; l++)
+		{
+			nbWeight += dims[l] * (dims[l - 1] + 1);
+		}
+		std::cout << "nbWeight "<<nbWeight << std::endl;
+		
+		//Init des poids en random
+		double* w = new double[nbWeight];
+		for (int i = 0; i < nbWeight; ++i)
+		{
+			w[i] = rand() / (double)RAND_MAX * 2.0 - 1.0;
+		}
+		return w;
 	}
 
-	__declspec(dllexport) void delete_pmc_model(double* model)
+	/// <summary>
+	/// 
+	/// </summary>
+	/// <param name="model"></param>
+	/// <param name="inputs"></param>
+	/// <param name="dimensions"> dimensions du réseau
+	/// [0] -> inputs_count
+	/// [1 .... N - 2] -> nb de neurones dans la couche
+	/// [N - 1] -> nb outputs
+	///  </param>
+	/// <param name="isClassification">classification ou regression</param>
+	__declspec(dllexport) double predict_MLP(double* model,  double samples[], int* dimensions, int layer_count, bool isClassification)
 	{
-		delete[] model;
-	}
+		MLP* mlp = new MLP(model, dimensions, layer_count);
+		mlp->d = dimensions;
+		mlp->w = model;
+		mlp->L = layer_count - 1;
 
-	__declspec(dllexport) MLP* create_pmc_model(int npl[], int size) {
-		auto mlp = new MLP;
-
-		for (int i = 0; i < size; ++i)
+		for (int j = 0; j < mlp->d[0]; ++j)
 		{
-			mlp->d.emplace_back(npl[i]);
+			mlp->x[0][j + 1] = samples[j];
 		}
 
-		mlp->L = size - 1;
-
-		for (int l = 0; l < size; ++l)
+		int offset = 0;
+		for (int l = 1; l < mlp->L + 1; ++l) //Parcours des couches
 		{
-			if (l == 0)
-			{
-			}
-			else
-			{
-				for (int i = 0; i < npl[l - 1] + 1; ++i)
-				{
-					for (int j = 0; j < npl[l] + 1; ++j)
-					{
-					}
-				}
-			}
-		}
+			if (l != 1)
+				offset += (mlp->d[l - 1]) * (mlp->d[l - 2] + 1);
 
-		for (int l = 0; l < size; ++l)
-		{
-			for (int j = 0; j < npl[l] + 1; ++j)
-			{
-				if (j > 0)
-				{
-					mlp->x.emplace_back(0.0);
-				}
-				else
-				{
-					mlp->x.emplace_back(1.0);
-				}
-			}
-		}
-
-		for (int l = 0; l < size; ++l)
-		{
-			for (int j = 0; j < npl[l] + 1; ++j)
-			{
-				if (j > 0)
-				{
-					mlp->deltas.emplace_back(0.0);
-				}
-				else
-				{
-					mlp->deltas.emplace_back(1.0);
-				}
-			}
-		}
-
-		return mlp;
-	}
-
-	__declspec(dllexport) void forward_pass(MLP* model, double inputs[], bool isClassification)
-	{
-		for (int j = 0; j < model->d[0]; ++j)
-		{
-			model->x[0][j + 1] = inputs[j];
-		}
-
-		for (int l = 1; l < model->L + 1; ++l)
-		{
-			for (int j = 1; j < model->d[l] + 1; ++j)
+			for (int j = 1; j < mlp->d[l] + 1; ++j) //Parcours des neuronnes
 			{
 				double sum = 0.0;
 
-				for (int i = 0; i < model->d[l - 1] + 1; ++i)
+				for (int i = 0; i < mlp->d[l - 1] + 1; ++i) //Parcours des poids
 				{
-					sum += model->x[l - 1][i] * model->w[l][i][j];
+					int id = offset + (j - 1) + i * (mlp->d[l]);
+					//std::cerr <<"offset =" << offset << " | j = " << j << " | i = " << i << " | id = " << id << std::endl;
+					sum += mlp->x[l - 1][i] * mlp->w[id];
+					std::cerr << "x =" << mlp->x[l - 1][i] << " | w = " << mlp->w[id] << std::endl;
 				}
 
-				if (l == model->L && !isClassification)
+				if (l == mlp->L && !isClassification)
 				{
-					model->x[l][j] = sum;
+					mlp->x[l][j] = sum;
 				}
 				else
 				{
-					model->x[l][j] = tanh(sum);
+					mlp->x[l][j] = tanh(sum);
 				}
 			}
 		}
+
+		return mlp->x[mlp->L][1];
 	}
 
-	__declspec(dllexport) double* predict(MLP* model, double inputs[])
-	{
-		forward_pass(model, inputs, true);
-
-		double* m = new double[model->x[model->L].size()];
-
-		for (int i = 1; i < model->x[model->L].size(); ++i)
-		{
-			m[i] = model->x[model->L][i];
-		}
-
-		return m;
-	}
-
-	__declspec(dllexport) void train(MLP* model, double allInputs[], double allExpectedOutputs[],
+	__declspec(dllexport) void train_MLP(MLP* model, double allInputs[], double allExpectedOutputs[],
 		bool isClassification, int sampleCount, int epochs, double alpha)
 	{
 		int inputsSize = model->d[0];

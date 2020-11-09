@@ -19,6 +19,7 @@ double Sign(double x)
 
 extern "C" {
 
+#pragma region Linear
 	//--------------------------------------Modèle linéaire-----------------------------------
 	/// <summary>
 	/// init des poids random
@@ -89,7 +90,9 @@ extern "C" {
 	__declspec(dllexport) void delete_model(double* model) {
 		delete[] model;
 	}
+#pragma endregion
 
+#pragma region MLP
 	//--------------------------------------MLP-------------------------------------------------
 	__declspec(dllexport) double* create_MLP_model(int dims[], int layer_count) {
 		
@@ -137,7 +140,9 @@ extern "C" {
 		for (int l = 1; l < mlp->L + 1; ++l) //Parcours des couches
 		{
 			if (l != 1)
+			{
 				offset += (mlp->d[l - 1]) * (mlp->d[l - 2] + 1);
+			}
 
 			for (int j = 1; j < mlp->d[l] + 1; ++j) //Parcours des neuronnes
 			{
@@ -174,6 +179,49 @@ extern "C" {
 		for (int it = 0; it < epochs; ++it)
 		{
 			int k = rand() % sampleCount - 1 + 0;
+
+			/*
+			...
+			*/
+
+			/*
+			for (int j = 1; j < model->d[model->L] + 1; ++j)
+			{
+				model->deltas[model->L][j] = model->x[model->L][j] - y_k[j - 1];
+				if (isClassification)
+				{
+					model->deltas[model->L][j] *= 1 - pow(model->x[model->L][j], 2);
+				}
+			}
+
+			for (int l = model->L; l > 1; --l)
+			{
+				for (int i = 0; i < model->d[l - 1] + 1; ++i)
+				{
+					double sum = 0.0;
+
+					for (int j = 1; j < model->d[l] + 1; ++j)
+					{
+						sum += model->w[l][i][j] * model->deltas[l][j];
+					}
+
+					// (1 - self.x[l - 1][i] ** 2) * sum
+					model->deltas[l - 1][i] = (1 - pow(model->x[l - 1][i], 2)) * sum;
+				}
+			}
+
+			for (int l = 1; l < model->L + 1; ++l)
+			{
+				for (int i = 0; i < model->d[l - 1] + 1; ++i)
+				{
+					for (int j = 1; j < model->d[l] + 1; ++j)
+					{
+						model->w[l][i][j] -= alpha * model->x[l - 1][i] * model->deltas[l][j];
+					}
+				}
+			}
+			*/
 		}
 	}
 }
+#pragma endregion

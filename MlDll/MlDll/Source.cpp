@@ -137,18 +137,18 @@ extern "C" {
 		}
 
 		int offset = 0;
-		for (int l = 1; l < mlp->L + 1; ++l) //Parcours des couches
+		for (int l = 1; l < mlp->L + 1; ++l) // Parcours des couches
 		{
 			if (l != 1)
 			{
 				offset += (mlp->d[l - 1]) * (mlp->d[l - 2] + 1);
 			}
 
-			for (int j = 1; j < mlp->d[l] + 1; ++j) //Parcours des neuronnes
+			for (int j = 1; j < mlp->d[l] + 1; ++j) // Parcours des neuronnes
 			{
 				double sum = 0.0;
 
-				for (int i = 0; i < mlp->d[l - 1] + 1; ++i) //Parcours des poids
+				for (int i = 0; i < mlp->d[l - 1] + 1; ++i) // Parcours des poids
 				{
 					int id = offset + (j - 1) + i * (mlp->d[l]);
 					//std::cerr <<"offset =" << offset << " | j = " << j << " | i = " << i << " | id = " << id << std::endl;
@@ -170,8 +170,7 @@ extern "C" {
 		return mlp->x[mlp->L][1];
 	}
 
-	__declspec(dllexport) void train_MLP(MLP* model, double allInputs[], double allExpectedOutputs[],
-		bool isClassification, int sampleCount, int epochs, double alpha)
+	__declspec(dllexport) void train_MLP(MLP* model, double allInputs[], double allExpectedOutputs[], bool isClassification, int sampleCount, int epochs, double alpha)
 	{
 		int inputsSize = model->d[0];
 		int outputsSize = model->d[model->L];
@@ -180,9 +179,60 @@ extern "C" {
 		{
 			int k = rand() % sampleCount - 1 + 0;
 
+			std::vector<double> x_k;
+			std::vector<double> y_k;
+
 			/*
-			...
+			for (int i = inputsSize * k; i < inputsSize * (k + 1); ++i)
+			{
+				x_k.emplace_back(allInputs[i]);
+			}
+
+			for (int i = outputsSize * k; i < outputsSize * (k + 1); ++i)
+			{
+				y_k.emplace_back(allExpectedOutputs[i]);
+			}
 			*/
+
+
+			/*
+			for (int j = 0; j < model->d[0]; ++j)
+			{
+				model->x[0][j + 1] = x_k.data()[j];
+			}
+
+			int offset = 0;
+			for (int l = 1; l < model->L + 1; ++l) // Parcours des couches
+			{
+				if (l != 1)
+				{
+					offset += (model->d[l - 1]) * (model->d[l - 2] + 1);
+				}
+
+				for (int j = 1; j < model->d[l] + 1; ++j) // Parcours des neuronnes
+				{
+					double sum = 0.0;
+
+					for (int i = 0; i < model->d[l - 1] + 1; ++i) // Parcours des poids
+					{
+						int id = offset + (j - 1) + i * (model->d[l]);
+						//std::cerr <<"offset =" << offset << " | j = " << j << " | i = " << i << " | id = " << id << std::endl;
+						sum += model->x[l - 1][i] * model->w[id];
+						std::cerr << "x =" << model->x[l - 1][i] << " | w = " << model->w[id] << std::endl;
+					}
+
+					if (l == model->L && !isClassification)
+					{
+						model->x[l][j] = sum;
+					}
+					else
+					{
+						model->x[l][j] = tanh(sum);
+					}
+				}
+			}
+			*/
+
 
 			/*
 			for (int j = 1; j < model->d[model->L] + 1; ++j)

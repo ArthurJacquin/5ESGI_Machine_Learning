@@ -1,27 +1,35 @@
 #include "MLP.h"
+#include <iostream>
 
 MLP::MLP(double* weights, int dims[], int layer_count)
 {
 	d = new int[layer_count];
+	node_count = 0;
 	for (int i = 0; i < layer_count; ++i)
 	{
 		d[i] = dims[i];
+		node_count += d[i];
 	}
+	node_count += layer_count;
 
 	L = layer_count - 1;
 
-	x.resize(layer_count);
+	x = new double[node_count];
+	int offset = 0;
 	for (int l = 0; l < layer_count; ++l)
 	{
+		if (l != 0)
+			offset += d[l - 1] + 1;
+
 		for (int j = 0; j < dims[l] + 1; ++j)
 		{
 			if (j > 0)
 			{
-				x[l].push_back(0.0);
+				x[offset + j] = 0.0;
 			}
 			else
 			{
-				x[l].push_back(1.0);
+				x[offset + j] = 1.0;
 			}
 		}
 	}
@@ -33,11 +41,11 @@ MLP::MLP(double* weights, int dims[], int layer_count)
 		{
 			if (j > 0)
 			{
-				deltas[l].emplace_back(0.0);
+				deltas[l].push_back(0.0);
 			}
 			else
 			{
-				deltas[l].emplace_back(1.0);
+				deltas[l].push_back(1.0);
 			}
 		}
 	}

@@ -12,7 +12,9 @@ extern "C"
 
     //------------------------MLP------------------------------------------------------
     __declspec(dllimport) double* create_MLP_model(int dims[], int layer_count);
-    __declspec(dllimport) double predict_MLP(double* model, double samples[], int* dimensions, int layer_count, bool isClassification);
+    __declspec(dllimport) double* predict_MLP(double* model, double samples[], int* dimensions, int layer_count, bool isClassification);
+    __declspec(dllimport) double* train_MLP(double* model, double allSamples[], int sampleCount, double allExpectedOutputs[],
+        int* dims, int layer_count, bool isClassification, int epochs, double alpha);
 }
 
 int main()
@@ -20,26 +22,62 @@ int main()
     std::cout.precision(5);
     getchar();
 
-    CasTest test(TestType::LinearSimple);
+    CasTest test(TestType::LinearMultiple);
     test.DisplayInfos();
 
+    //Variables
     int layer_count = 3;
     int* dims = new int[layer_count] { 2, 3, 1 };
+    int node_count = 0;
+    for (int i = 0; i < layer_count; ++i)
+    {
+        node_count += dims[i];
+    }
+    node_count += layer_count;
+
+    bool isClassification = true;
+    int epoch = 1000;
+    double alpha = 0.1;
+
+    //Creation du model
     double* model = create_MLP_model(dims, layer_count);
 
+    //Linear
+#if 0 
     std::cout << "BEFORE !" << std::endl;
     for (size_t i = 0; i < test.sample_count; i ++)
     {
-        std::cout << " resultat : " << predict_MLP(model, new double[2]{ test.samples[i * 2], test.samples[i * 2 + 1] }, dims, layer_count, true) << std::endl;
+        std::cout << predict_linear_model_classification(model, new double[2]{ test.samples[i * 2], test.samples[i * 2 + 1] }, 2) << std::endl;
     }
 
-   /* train_linear_model_Rosenblatt(model, test.samples, test.sample_count, 2, test.outputs, 1000, 0.1);
+    train_linear_model_Rosenblatt(model, test.samples, test.sample_count, 2, test.outputs, epoch, alpha);
 
     std::cout << "AFTER !" << std::endl;
     for (size_t i = 0; i < test.sample_count; i++)
     {
         std::cout << predict_linear_model_classification(model, new double[2]{ test.samples[i * 2], test.samples[i * 2 + 1] }, 2) << std::endl;
-    }*/
-    
+    }
+#endif
+
+    //MLP
+#if 1
+    std::cout << "BEFORE !" << std::endl;
+    for (size_t i = 0; i < test.sample_count; i++)
+    {
+        double* result = predict_MLP(model, new double[2]{ test.samples[i * 2], test.samples[i * 2 + 1] }, dims, layer_count, isClassification);
+        std::cout << " resultat : " << result[node_count - 1] << std::endl;
+    }
+
+    train_MLP(model, test.samples, test.sample_count, test.outputs, dims, layer_count, isClassification, epoch, alpha);
+
+    std::cout << "AFTER !" << std::endl;
+    for (size_t i = 0; i < test.sample_count; i++)
+    {
+        double* result = predict_MLP(model, new double[2]{ test.samples[i * 2], test.samples[i * 2 + 1] }, dims, layer_count, isClassification);
+        std::cout << " resultat : " << result[node_count - 1] << std::endl;
+    }
+
+#endif 
+
     delete_model(model);
 }

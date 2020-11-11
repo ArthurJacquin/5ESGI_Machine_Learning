@@ -2,6 +2,7 @@
 #include <iostream>
 #include <time.h>
 #include <vector>
+#include <exception>
 #include "MLP.h"
 
 /// <summary>
@@ -98,7 +99,7 @@ extern "C" {
 		
 		//Nombre total de poids
 		int nbWeight = 0;
-		for (size_t l = 1; l < layer_count + 1; l++)
+		for (size_t l = 1; l < layer_count; l++)
 		{
 			nbWeight += dims[l] * (dims[l - 1] + 1);
 		}
@@ -124,25 +125,27 @@ extern "C" {
 	/// [N - 1] -> nb outputs
 	///  </param>
 	/// <param name="isClassification">classification ou regression</param>
-	__declspec(dllexport) double predict_MLP(double* model,  double samples[], int* dimensions, int layer_count, bool isClassification)
+	__declspec(dllexport) double* predict_MLP(double* model,  double samples[], int* dims, int layer_count, bool isClassification)
 	{
-		MLP* mlp = new MLP(model, dimensions, layer_count);
-		mlp->d = dimensions;
+		MLP* mlp = new MLP(model, dims, layer_count);
+		mlp->d = dims;
 		mlp->w = model;
 		mlp->L = layer_count - 1;
 
 		for (int j = 0; j < mlp->d[0]; ++j)
 		{
-			mlp->x[0][j + 1] = samples[j];
+			mlp->x[j + 1] = samples[j];
 		}
 
-		int offset = 0;
+		int offsetW = 0;
+		int offsetX = 0;
 		for (int l = 1; l < mlp->L + 1; ++l) // Parcours des couches
 		{
 			if (l != 1)
 			{
-				offset += (mlp->d[l - 1]) * (mlp->d[l - 2] + 1);
+				offsetW += (mlp->d[l - 1]) * (mlp->d[l - 2] + 1);
 			}
+			offsetX += mlp->d[l - 1] + 1;
 
 			for (int j = 1; j < mlp->d[l] + 1; ++j) // Parcours des neuronnes
 			{
@@ -150,128 +153,132 @@ extern "C" {
 
 				for (int i = 0; i < mlp->d[l - 1] + 1; ++i) // Parcours des poids
 				{
-					int id = offset + (j - 1) + i * (mlp->d[l]);
-					//std::cerr <<"offset =" << offset << " | j = " << j << " | i = " << i << " | id = " << id << std::endl;
-					sum += mlp->x[l - 1][i] * mlp->w[id];
-					std::cerr << "x =" << mlp->x[l - 1][i] << " | w = " << mlp->w[id] << std::endl;
+					int idW = offsetW + (j - 1) + i * (mlp->d[l]);
+					//std::cerr <<"offset =" << offsetX << " | j = " << j << " | i = " << i << "| idx =" << offsetX + j << std::endl;
+					sum += mlp->x[offsetX - (mlp->d[l - 1] + 1) + i] * mlp->w[idW];
+					//std::cerr << "idx =" << offsetX - (mlp->d[l - 1] + 1) + i << "X =" << mlp->x[offsetX + j] << " | W = " << mlp->w[idW] << std::endl;
 				}
-
 				if (l == mlp->L && !isClassification)
 				{
-					mlp->x[l][j] = sum;
+					mlp->x[offsetX + j] = sum;
 				}
 				else
 				{
-					mlp->x[l][j] = tanh(sum);
+					mlp->x[offsetX + j] = tanh(sum);
 				}
 			}
 		}
 
-		return mlp->x[mlp->L][1];
+		return mlp->x;
 	}
 
-	__declspec(dllexport) void train_MLP(MLP* model, double allInputs[], double allExpectedOutputs[], bool isClassification, int sampleCount, int epochs, double alpha)
+	__declspec(dllexport) double* train_MLP(double* model, double allSamples[], int sampleCount, double allExpectedOutputs[], int* dims, int layer_count, bool isClassification, int epochs, double alpha)
 	{
-		int inputsSize = model->d[0];
-		int outputsSize = model->d[model->L];
+		MLP* mlp = new MLP(model, dims, layer_count);
+		mlp->d = dims;
+		mlp->w = model;
+		mlp->L = layer_count - 1;
+
+		//printArray(mlp->deltas, );
+
+		int inputsSize = mlp->d[0];
+		int outputsSize = mlp->d[mlp->L];
+
+		srand(time(NULL));
 
 		for (int it = 0; it < epochs; ++it)
 		{
-			int k = rand() % sampleCount - 1 + 0;
+			int k = rand() % (sampleCount);
 
-			std::vector<double> x_k;
-			std::vector<double> y_k;
+			double* x_k = new double[inputsSize];
+			double* y_k = new double[outputsSize];
 
-			/*
-			for (int i = inputsSize * k; i < inputsSize * (k + 1); ++i)
+
+			//Init des inputs
+			for (size_t i = 0; i < inputsSize; i++)
 			{
-				x_k.emplace_back(allInputs[i]);
+				x_k[i] = allSamples[inputsSize * k + i];
 			}
 
-			for (int i = outputsSize * k; i < outputsSize * (k + 1); ++i)
+			for (size_t i = 0; i < outputsSize; i++)
 			{
-				y_k.emplace_back(allExpectedOutputs[i]);
-			}
-			*/
-
-
-			/*
-			for (int j = 0; j < model->d[0]; ++j)
-			{
-				model->x[0][j + 1] = x_k.data()[j];
+				y_k[i] = allExpectedOutputs[outputsSize * k + i];
 			}
 
+			mlp->x = predict_MLP(mlp->w, x_k, mlp->d, layer_count, isClassification);
+
+			//Offset
 			int offset = 0;
-			for (int l = 1; l < model->L + 1; ++l) // Parcours des couches
+			for (size_t i = 0; i < mlp->L; i++)
+			{
+				offset += mlp->d[i];
+			}
+			offset += mlp->L;
+
+			//Init des deltas
+			for (int j = 1; j < mlp->d[mlp->L] + 1; ++j)
+			{
+				mlp->deltas[mlp->L][j] = mlp->x[offset + j] - y_k[j - 1];
+				if (isClassification)
+				{
+					mlp->deltas[mlp->L][j] *= (1 - pow(mlp->x[offset + j], 2));
+				}
+			}
+
+			//Retropropagation
+			int offsetW = 0;
+			for (int l = mlp->L; l > 1; --l) // Parcours des couches
 			{
 				if (l != 1)
 				{
-					offset += (model->d[l - 1]) * (model->d[l - 2] + 1);
+					offsetW += (mlp->d[l - 1]) * (mlp->d[l - 2] + 1);
 				}
 
-				for (int j = 1; j < model->d[l] + 1; ++j) // Parcours des neuronnes
+				//Offset X
+				int offsetX = 0;
+				for (size_t i = 0; i < l - 1; i++)
+				{
+					offsetX += mlp->d[i];
+				}
+				offsetX += l - 1;
+
+				for (int i = 0; i < mlp->d[l - 1] + 1; ++i)
 				{
 					double sum = 0.0;
 
-					for (int i = 0; i < model->d[l - 1] + 1; ++i) // Parcours des poids
+					for (int j = 1; j < mlp->d[l] + 1; ++j)
 					{
-						int id = offset + (j - 1) + i * (model->d[l]);
-						//std::cerr <<"offset =" << offset << " | j = " << j << " | i = " << i << " | id = " << id << std::endl;
-						sum += model->x[l - 1][i] * model->w[id];
-						std::cerr << "x =" << model->x[l - 1][i] << " | w = " << model->w[id] << std::endl;
+						int idW = offsetW + (j - 1) + i * (mlp->d[l]);
+						sum += mlp->w[idW] * mlp->deltas[l][j];
 					}
 
-					if (l == model->L && !isClassification)
-					{
-						model->x[l][j] = sum;
-					}
-					else
-					{
-						model->x[l][j] = tanh(sum);
-					}
+					mlp->deltas[l - 1][i] = (1 - pow(mlp->x[offsetX + i], 2)) * sum;
 				}
 			}
-			*/
 
-
-			/*
-			for (int j = 1; j < model->d[model->L] + 1; ++j)
+			//Mise a jour des poids
+			offsetW = 0;
+			int offsetX = 0;
+			for (int l = 1; l < mlp->L + 1; ++l)
 			{
-				model->deltas[model->L][j] = model->x[model->L][j] - y_k[j - 1];
-				if (isClassification)
+				if (l != 1)
 				{
-					model->deltas[model->L][j] *= 1 - pow(model->x[model->L][j], 2);
+					offsetW += (mlp->d[l - 1]) * (mlp->d[l - 2] + 1);
+					offsetX += mlp->d[l - 1];
 				}
-			}
 
-			for (int l = model->L; l > 1; --l)
-			{
-				for (int i = 0; i < model->d[l - 1] + 1; ++i)
+				for (int i = 0; i < mlp->d[l - 1] + 1; ++i)
 				{
-					double sum = 0.0;
-
-					for (int j = 1; j < model->d[l] + 1; ++j)
+					for (int j = 1; j < mlp->d[l] + 1; ++j)
 					{
-						sum += model->w[l][i][j] * model->deltas[l][j];
-					}
-
-					// (1 - self.x[l - 1][i] ** 2) * sum
-					model->deltas[l - 1][i] = (1 - pow(model->x[l - 1][i], 2)) * sum;
-				}
-			}
-
-			for (int l = 1; l < model->L + 1; ++l)
-			{
-				for (int i = 0; i < model->d[l - 1] + 1; ++i)
-				{
-					for (int j = 1; j < model->d[l] + 1; ++j)
-					{
-						model->w[l][i][j] -= alpha * model->x[l - 1][i] * model->deltas[l][j];
+						int id = offsetW + (j - 1) + i * (mlp->d[l]);
+						mlp->w[id] -= alpha * mlp->x[offsetX + i] * mlp->deltas[l][j];
 					}
 				}
 			}
-			*/
 		}
+
+		return mlp->w;
 	}
 }
 #pragma endregion

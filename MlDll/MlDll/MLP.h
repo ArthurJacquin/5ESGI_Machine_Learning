@@ -6,8 +6,10 @@ struct MLP
 	int* d;
 	int L;
 	double* w;
-	std::vector<std::vector<double>> x;
+	double* x;
 	std::vector<std::vector<double>> deltas;
+
+	int node_count;
 
 	MLP(double* weights, int dims[], int layer_count);
 	~MLP();

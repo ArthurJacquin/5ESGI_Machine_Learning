@@ -1,9 +1,8 @@
-﻿
-using System.Runtime.InteropServices;
+﻿using System.Runtime.InteropServices;
 
 public static class MlDllWrapper
 {
-    [DllImport("MlDll", EntryPoint = "my_add")]
+    /*[DllImport("MlDll", EntryPoint = "my_add")]
     public static extern double MyAdd(double a, double b);
     
     [DllImport("MlDll", EntryPoint = "create_linear_model")]
@@ -18,5 +17,8 @@ public static class MlDllWrapper
         double[] inputs, int inputSize, int classCount);
     
     [DllImport("MlDll", EntryPoint = "delete_linear_model")]
-    public static extern void DeleteLinearModel(System.IntPtr model);
+    public static extern void DeleteLinearModel(System.IntPtr model);*/
+
+    [DllImport("MlDll", EntryPoint = "export_result")]
+    public static extern System.IntPtr TrainMlp(int type, int layerCount, int[] dims, bool isClassification, int epoch, double alpha);
 }

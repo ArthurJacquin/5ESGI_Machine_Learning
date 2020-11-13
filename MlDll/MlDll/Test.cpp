@@ -41,6 +41,21 @@ CasTest::CasTest(TestType t)
 		break;
 
 	case Cross:
+		sample_count = 1000;
+		samples = new double[sample_count * 2];
+		for (size_t i = 0; i < (sample_count * 2); i++)
+		{
+			samples[i] = rand() / (double)RAND_MAX * 2.0 - 1.0;
+		}
+
+		outputs = new double[sample_count];
+		for (size_t i = 0; i < sample_count; i++)
+		{
+			if (abs(samples[i * 2]) <= 0.3 || abs(samples[i * 2 + 1]) <= 0.3)
+				outputs[i] = 1.0;
+			else
+				outputs[i] = -1.0;
+		}
 		break;
 
 	case MultiLinear:

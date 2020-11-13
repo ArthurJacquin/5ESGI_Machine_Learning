@@ -147,11 +147,7 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
-    <ClCompile Include="Test.cpp" />
     <ClCompile Include="TestMLDLL.cpp" />
-  </ItemGroup>
-  <ItemGroup>
-    <ClInclude Include="Test.h" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\MlDll\MlDll.vcxproj">

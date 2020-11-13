@@ -1,5 +1,5 @@
 #include <iostream>
-#include "Test.h"
+//#include "Test.h"
 
 extern "C"
 {
@@ -15,19 +15,21 @@ extern "C"
     __declspec(dllimport) double* predict_MLP(double* model, double samples[], int* dimensions, int layer_count, bool isClassification);
     __declspec(dllimport) double* train_MLP(double* model, double allSamples[], int sampleCount, double allExpectedOutputs[],
         int* dims, int layer_count, bool isClassification, int epochs, double alpha);
+	__declspec(dllimport) double* export_result(int type, int layer_count, int* dims,
+        int node_count, bool isClassification, int epoch, double alpha);
 }
 
 int main()
 {
-    std::cout.precision(5);
+   /* std::cout.precision(5);
     getchar();
 
-    CasTest test(TestType::LinearMultiple);
+    CasTest test(TestType::Cross);
     test.DisplayInfos();
 
     //Variables
     int layer_count = 3;
-    int* dims = new int[layer_count] { 2, 3, 1 };
+    int* dims = new int[layer_count] { 2, 4, 1 };
     int node_count = 0;
     for (int i = 0; i < layer_count; ++i)
     {
@@ -43,7 +45,7 @@ int main()
     double* model = create_MLP_model(dims, layer_count);
 
     //Linear
-#if 0 
+#if 0
     std::cout << "BEFORE !" << std::endl;
     for (size_t i = 0; i < test.sample_count; i ++)
     {
@@ -79,5 +81,22 @@ int main()
 
 #endif 
 
-    delete_model(model);
+    delete_model(model);*/
+
+    int layer_count = 3;
+    int* dims = new int[layer_count] { 2, 3, 1 };
+    int node_count = 0;
+    for (int i = 0; i < layer_count; ++i)
+    {
+        node_count += dims[i];
+    }
+    node_count += layer_count;
+
+	double* exportResults = export_result(2, layer_count, dims, node_count, true, 1000, 0.1);
+
+	for (size_t i = 0; i < 4; i++)
+    {
+        std::cout << " resultat : " << exportResults[i] << std::endl;
+    }
+	return 0;
 }

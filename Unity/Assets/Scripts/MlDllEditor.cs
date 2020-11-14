@@ -1,21 +1,6 @@
 ﻿using UnityEditor;
 using UnityEngine;
 
-public enum TypeTest
-{
-    LinearSimple,
-    LinearMultiple,
-    XOR,
-    Cross,
-    MultiLinear,
-    MultiCross,
-    LinearSimple2D,
-    NonLinearSimple2D,
-    LinearSimple3D,
-    LinearTricky3D,
-    NonLinearSimple3D
-}
-
 [CustomEditor(typeof(MlDllRun))]
 public class MlDllEditor : Editor
 {
@@ -37,7 +22,6 @@ public class MlDllEditor : Editor
         MlDllRun dllRun = (MlDllRun) target;
         if (GUILayout.Button("TRAINING"))
         {
-            Debug.Log("Try to run dll !");
             dllRun.RunMlDll(type, isClassification, epoch, alpha);
         }
               

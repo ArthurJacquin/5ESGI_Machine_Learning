@@ -4,7 +4,7 @@
 #include <vector>
 #include <exception>
 #include "MLP.h"
-#include "Test.h"
+#include "../TestMLDLL/Test.h"
 
 /// <summary>
 /// input = neurones en entrée du perceptron
@@ -282,21 +282,18 @@ extern "C" {
 		return mlp->w;
 	}
 
-	_declspec(dllexport) double* export_result(int type, int layer_count, int* dims, int node_count, bool isClassification, int epoch, double alpha)
+	_declspec(dllexport) double* export_result(int sample_count, double* samples, double* outputs, int layer_count, int* dims, int node_count, bool isClassification, int epoch, double alpha)
 	{
-		//Initialisation du test
-		CasTest test((TestType)type);
-		
 		double* model = create_MLP_model(dims, layer_count);
 
 		//Training
-		train_MLP(model, test.samples, test.sample_count, test.outputs, dims, layer_count, isClassification, epoch, alpha);
+		train_MLP(model, samples, sample_count, outputs, dims, layer_count, isClassification, epoch, alpha);
 
 		//Enregistrement des résultats prédits
-		double* result = new double[test.sample_count];
-		for (size_t i = 0; i < test.sample_count; i++)
+		double* result = new double[sample_count];
+		for (size_t i = 0; i < sample_count; i++)
 		{
-			double* result_tmp = predict_MLP(model, new double[2]{ test.samples[i * 2], test.samples[i * 2 + 1] }, dims, layer_count, isClassification);
+			double* result_tmp = predict_MLP(model, new double[2]{ samples[i * 2], samples[i * 2 + 1] }, dims, layer_count, isClassification);
 			result[i] = result_tmp[node_count - 1];
 		}
 

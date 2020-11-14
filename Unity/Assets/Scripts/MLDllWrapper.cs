@@ -2,23 +2,7 @@
 
 public static class MlDllWrapper
 {
-    /*[DllImport("MlDll", EntryPoint = "my_add")]
-    public static extern double MyAdd(double a, double b);
-    
-    [DllImport("MlDll", EntryPoint = "create_linear_model")]
-    public static extern System.IntPtr CreateLinearModel(int inputSize);
-    
-    [DllImport("MlDll", EntryPoint = "predict_linear_model_classification")]
-    public static extern double PredictLinearModelClassification(System.IntPtr model,
-        double[] inputs, int inputSize);
-    
-    [DllImport("MlDll", EntryPoint = "predict_linear_model_multiclass_classification")]
-    public static extern System.IntPtr PredictLinearModelMultiClassClassification(System.IntPtr model,
-        double[] inputs, int inputSize, int classCount);
-    
-    [DllImport("MlDll", EntryPoint = "delete_linear_model")]
-    public static extern void DeleteLinearModel(System.IntPtr model);*/
-
     [DllImport("MlDll", EntryPoint = "export_result")]
-    public static extern System.IntPtr TrainMlp(int type, int layerCount, int[] dims, bool isClassification, int epoch, double alpha);
+    public static extern System.IntPtr TrainMlp(int sampleCount, double[] samples, double[] outputs,
+        int layerCount, int[] dims, int nodeCount, bool isClassification, int epoch, double alpha);
 }

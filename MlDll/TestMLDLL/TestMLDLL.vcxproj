@@ -147,12 +147,16 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="Test.cpp" />
     <ClCompile Include="TestMLDLL.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\MlDll\MlDll.vcxproj">
       <Project>{8f44f30f-5572-4491-840d-6a2bafc4f4e8}</Project>
     </ProjectReference>
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="Test.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

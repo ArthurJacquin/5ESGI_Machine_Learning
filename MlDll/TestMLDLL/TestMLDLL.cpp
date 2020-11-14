@@ -1,5 +1,5 @@
 #include <iostream>
-//#include "Test.h"
+#include "Test.h"
 
 extern "C"
 {
@@ -21,15 +21,15 @@ extern "C"
 
 int main()
 {
-   /* std::cout.precision(5);
+    std::cout.precision(5);
     getchar();
 
-    CasTest test(TestType::Cross);
+    CasTest test(TestType::LinearMultiple);
     test.DisplayInfos();
 
     //Variables
     int layer_count = 3;
-    int* dims = new int[layer_count] { 2, 4, 1 };
+    int* dims = new int[layer_count] { 2, 3, 1 };
     int node_count = 0;
     for (int i = 0; i < layer_count; ++i)
     {
@@ -81,9 +81,9 @@ int main()
 
 #endif 
 
-    delete_model(model);*/
+    delete_model(model);
 
-    int layer_count = 3;
+   /*int layer_count = 3;
     int* dims = new int[layer_count] { 2, 3, 1 };
     int node_count = 0;
     for (int i = 0; i < layer_count; ++i)
@@ -98,5 +98,5 @@ int main()
     {
         std::cout << " resultat : " << exportResults[i] << std::endl;
     }
-	return 0;
+	return 0;*/
 }

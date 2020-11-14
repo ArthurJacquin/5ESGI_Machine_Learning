@@ -1,4 +1,4 @@
-﻿using System.Collections;
+﻿using System;
 using System.Collections.Generic;
 using UnityEngine;
 
@@ -7,46 +7,63 @@ public class SpherePoolItem
 {
     public GameObject poolObj;
     public int amount;
-    public bool shouldExpand = true;
 
-    public SpherePoolItem(GameObject obj, int amt, bool exp = true)
+    public SpherePoolItem(GameObject obj, int amt)
     {
         poolObj = obj;
         amount = amt;
-        shouldExpand = exp;
     }
 }
 
+[ExecuteInEditMode]
 public class Pooler : MonoBehaviour
 {
-    public List<SpherePoolItem> itemsToPool;
+    public SpherePoolItem itemsToPool;
 
-    public List<GameObject> pooledObj;
-    private List<int> _positions;
-    
-    public void InitializePool()
+    public static List<GameObject> PooledObj;
+
+    private void Awake()
     {
-        pooledObj = new List<GameObject>();
-        _positions = new List<int>();
-
-        for (int i = 0; i < itemsToPool.Count; ++i)
+        if (PooledObj == null)
         {
-            ObjectPoolItemToPooledObject(i);
+            InitializePool();
         }
     }
 
-    public List<GameObject> GetAllPooledObjects(int index)
+    private void Update()
     {
-        return pooledObj;
+        if (PooledObj == null)
+        {
+            InitializePool();
+        }
     }
 
-    private void ObjectPoolItemToPooledObject(int index)
+    public void InitializePool()
     {
+        DestroyChildren();
+        PooledObj = new List<GameObject>();
         
+        ObjectPoolItemToPooledObject();
     }
-    
-    public void DestroyPool()
+
+    private void ObjectPoolItemToPooledObject()
     {
-        
+        var item = itemsToPool;
+
+        for (int i = 0; i < item.amount; ++i)
+        {
+            GameObject obj = (GameObject) Instantiate(item.poolObj, this.transform, true);
+            obj.SetActive(false);
+            PooledObj.Add(obj);
+        }
+    }
+
+    private void DestroyChildren()
+    {
+        int nbChild = this.transform.childCount;
+        for (int i = 0; i < nbChild; ++i)
+        {
+            DestroyImmediate(this.transform.GetChild(0).gameObject);
+        }
     }
 }

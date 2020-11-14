@@ -41,7 +41,7 @@ CasTest::CasTest(TestType t)
 		break;
 
 	case Cross:
-		sample_count = 1000;
+		sample_count = 500;
 		samples = new double[sample_count * 2];
 		for (size_t i = 0; i < (sample_count * 2); i++)
 		{

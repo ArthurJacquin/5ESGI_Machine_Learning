@@ -23,21 +23,21 @@ public struct TestInfos
     public int[] Dimensions;
 }
 
-
 public class TestClass
 {
     public int SampleCount;
+    public int NodeCount;
 
     public double[] Samples;
     public double[] Outputs;
 
-    private TypeTest _type;
+    public TypeTest Type;
 
     public TestInfos Infos;
     
     public TestClass(TypeTest type)
     {
-        _type = type;
+        Type = type;
         Infos = new TestInfos();
         
         switch (type)
@@ -116,7 +116,7 @@ public class TestClass
                 Infos = new TestInfos()
                 {
                     LayerCount = 3,
-                    OutputSize = 1000,
+                    OutputSize = 500,
                     Dimensions = new int[] {2, 4, 1}
                 };
                 break;
@@ -235,11 +235,17 @@ public class TestClass
                 };
                 break;
         }
+        for (int i = 0; i < Infos.LayerCount; ++i)
+        {
+            NodeCount += Infos.Dimensions[i];
+        }
+
+        NodeCount += Infos.LayerCount;
     }
     
     public void DisplayInfos()
     {
-        Debug.LogFormat("Type of the test : {0}", _type.ToString());
+        Debug.LogFormat("Type of the test : {0}", Type.ToString());
         Debug.Log("SAMPLES :");
         for (int i = 0; i < SampleCount; ++i)
         {
@@ -249,6 +255,17 @@ public class TestClass
         for (int i = 0; i < Outputs.Length; ++i)
         {
             Debug.LogFormat("Output {0} : {1}", i, Outputs[i]);
+        }
+    }
+
+    public void DisplayResults()
+    {
+        Debug.LogFormat("Type of the test : {0}", Type.ToString());
+
+        Debug.Log("RESULTS :");
+        for (int i = 0; i < Outputs.Length; ++i)
+        {
+            Debug.LogFormat("Result {0} : {1}", i, Outputs[i]);
         }
     }
 }

@@ -1,7 +1,6 @@
 #include "MLP.h"
 #include <iostream>
 
-//Auteurs : Benoit, Arthur et Margot
 MLP::MLP(double* weights, int dims[], int layer_count)
 {
 	d = new int[layer_count];

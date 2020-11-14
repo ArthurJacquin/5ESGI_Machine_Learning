@@ -23,6 +23,7 @@ extern "C" {
 
 #pragma region Linear
 	//--------------------------------------Modèle linéaire-----------------------------------
+	//Auteurs : Arthur et Margot
 	/// <summary>
 	/// init des poids random
 	/// </summary>
@@ -40,6 +41,7 @@ extern "C" {
 	/// <summary>
 	/// prédit un output 
 	/// </summary>
+	//Auteurs : Arthur et Margot
 	__declspec(dllexport) double predict_linear_model_classification(double* model, double samples[], int input_count) {
 		
 		double sum = model[0]; //poids du biais
@@ -57,6 +59,7 @@ extern "C" {
 		return 1.0;
 	}
 
+	//Auteurs : Arthur et Margot
 	__declspec(dllexport) void train_linear_model_Rosenblatt(double* model, double all_samples[], int sample_count, int input_count,
 		double all_expected_outputs[], int epochs, double learning_rate) {
 		
@@ -96,6 +99,8 @@ extern "C" {
 
 #pragma region MLP
 	//--------------------------------------MLP-------------------------------------------------
+	//Auteurs : Benoit 
+	//Debug : Arthur et Margot
 	__declspec(dllexport) double* create_MLP_model(int dims[], int layer_count) {
 		
 		//Nombre total de poids
@@ -126,6 +131,8 @@ extern "C" {
 	/// [N - 1] -> nb outputs
 	///  </param>
 	/// <param name="isClassification">classification ou regression</param>
+	//Auteurs : Benoit 
+	//Debug : Arthur et Margot
 	__declspec(dllexport) double* predict_MLP(double* model,  double samples[], int* dims, int layer_count, bool isClassification)
 	{
 		MLP* mlp = new MLP(model, dims, layer_count);
@@ -173,6 +180,8 @@ extern "C" {
 		return mlp->x;
 	}
 
+	//Auteurs : Benoit 
+	//Debug : Arthur, Margot et Attika
 	__declspec(dllexport) double* train_MLP(double* model, double allSamples[], int sampleCount, double allExpectedOutputs[], int* dims, int layer_count, bool isClassification, int epochs, double alpha)
 	{
 		MLP* mlp = new MLP(model, dims, layer_count);
@@ -282,6 +291,7 @@ extern "C" {
 		return mlp->w;
 	}
 
+	//Auteur : Arthur et Attika
 	_declspec(dllexport) double* export_result(int type, int layer_count, int* dims, int node_count, bool isClassification, int epoch, double alpha)
 	{
 		//Initialisation du test

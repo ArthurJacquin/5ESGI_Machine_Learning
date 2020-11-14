@@ -1,6 +1,6 @@
 #include <iostream>
 //#include "Test.h"
-
+//Auteur : Arthur
 extern "C"
 {
     //------------------------Modèle linéaire----------------------------------------

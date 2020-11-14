@@ -2,7 +2,6 @@
 #include <iostream>
 #include <time.h>
 
-//Auteurs : Arthur, Margot, Attika et Benoit
 CasTest::CasTest(TestType t)
 {
 	srand(time(NULL));

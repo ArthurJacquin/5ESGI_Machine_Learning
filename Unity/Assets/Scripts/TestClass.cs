@@ -101,7 +101,7 @@ public class TestClass
                 Samples = new double[SampleCount * 2];
                 for (int i = 0; i < SampleCount * 2; ++i)
                 {
-                    Samples[i] = Random.Range(0.0f, 1.0f) / double.MaxValue * 2.0f - 1.0f;
+                    Samples[i] = Random.Range(0.0f, 1.0f) * 2.0f - 1.0f;
                 }
                 
                 Outputs = new double[SampleCount];

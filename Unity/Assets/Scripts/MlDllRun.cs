@@ -30,6 +30,12 @@ public class MlDllRun : MonoBehaviour
         //test.DisplayResults();
     }
 
+    public void Simulate(TypeTest type, bool isClassification, int epoch, double alpha)
+    {
+        var test = new TestClass(type);
+        UpdateVisualResults(test, test.Outputs);
+    }
+
     private void UpdateVisualResults(TestClass test, double[] results)
     {
         Pooler.GetInstance().InitializePool();
@@ -46,7 +52,7 @@ public class MlDllRun : MonoBehaviour
             Debug.LogWarning("There isnt enough objects in pool");
             return;
         }
-
+        
         switch (test.Type)
         {
             case TypeTest.LinearSimple:
@@ -60,6 +66,13 @@ public class MlDllRun : MonoBehaviour
                 break;
             
             case TypeTest.LinearMultiple:
+                for (int i = 0; i < results.Length; ++i)
+                {
+                    _pool[i].transform.position = new Vector3((float)test.Samples[i * 2],(float)test.Samples[i * 2 + 1], 0.0f);
+                    _pool[i].SetActive(true);
+
+                    _pool[i].GetComponent<Renderer>().material = results[i] > 0 ? blueMat : redMat;
+                }
                 break;
             
             case TypeTest.XOR:
@@ -73,6 +86,13 @@ public class MlDllRun : MonoBehaviour
                 break;
             
             case TypeTest.Cross:
+                for (int i = 0; i < results.Length; ++i)
+                {
+                    _pool[i].transform.position = new Vector3((float)test.Samples[i * 2],(float)test.Samples[i * 2 + 1], 0.0f);
+                    _pool[i].SetActive(true);
+
+                    _pool[i].GetComponent<Renderer>().material = results[i] > 0 ? blueMat : redMat;
+                }
                 break;
             
             

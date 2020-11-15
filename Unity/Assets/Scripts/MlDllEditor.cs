@@ -24,6 +24,11 @@ public class MlDllEditor : Editor
         {
             dllRun.RunMlDll(type, isClassification, epoch, alpha);
         }
+
+        if (GUILayout.Button("SIMULATE TRAINING"))
+        {
+            dllRun.Simulate(type, isClassification, epoch, alpha);
+        }
               
     }
 }

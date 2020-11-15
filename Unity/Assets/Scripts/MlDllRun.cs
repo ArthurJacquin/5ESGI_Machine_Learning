@@ -14,7 +14,7 @@ public class MlDllRun : MonoBehaviour
     {
         //Initialisation des infos du test en focntion de son type
         var test = new TestClass(type);
-        //test.DisplayInfos();
+        test.DisplayInfos();
         
         //Récupération des résultats via la dll
         var results = MlDllWrapper.TrainMlp(test.SampleCount, test.Samples, test.Outputs, 

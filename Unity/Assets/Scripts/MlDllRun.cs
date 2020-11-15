@@ -30,7 +30,7 @@ public class MlDllRun : MonoBehaviour
         //test.DisplayResults();
     }
 
-    public void Simulate(TypeTest type, bool isClassification, int epoch, double alpha)
+    public void Simulate(TypeTest type)
     {
         var test = new TestClass(type);
         UpdateVisualResults(test, test.Outputs);

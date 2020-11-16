@@ -294,7 +294,16 @@ extern "C" {
 		for (size_t i = 0; i < sample_count; i++)
 		{
 			double* result_tmp = predict_MLP(model, new double[2]{ samples[i * 2], samples[i * 2 + 1] }, dims, layer_count, isClassification);
-			result[i] = result_tmp[node_count - 1];
+			if(dims[layer_count - 1] == 1)
+			{
+				result[i] = result_tmp[node_count - 1];
+			}
+			else //multi class 
+			{
+				//TODO : faire des trucs
+				result[i] = result_tmp[node_count - 1];
+			}
+			
 		}
 
 		delete_model(model);

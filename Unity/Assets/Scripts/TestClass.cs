@@ -152,10 +152,9 @@ public class TestClass
                 break;
             
             case TypeTest.LinearSimple2D:
-                //TODO : update needed
                 SampleCount = 2;
-                Samples = new double[] {1.0f, 1.0f, 2.0f, 3.0f, 3.0f, 3.0f};
-                Outputs = new double[] {1, -1, -1};
+                Samples = new double[] {1.0f, 2.0f};
+                Outputs = new double[] {2, 3};
                 Infos = new TestInfos()
                 {
                     LayerCount = 2,
@@ -165,25 +164,22 @@ public class TestClass
                 break;
             
             case TypeTest.NonLinearSimple2D:
-                //TODO : update needed
                 SampleCount = 3;
-                Samples = new double[] {1.0f, 1.0f, 2.0f, 3.0f, 3.0f, 3.0f};
-                Outputs = new double[] {1, -1, -1};
+                Samples = new double[] {1.0f, 2.0f, 3.0f};
+                Outputs = new double[] {2, 3, 2.5f};
                 
                 Infos = new TestInfos()
                 {
-                    //TODO : update needed
-                    LayerCount = 2,
+                    LayerCount = 3,
                     OutputSize = 3,
-                    Dimensions = new int[] {2, 1}
+                    Dimensions = new int[] {1, 3, 1}
                 };
                 break;
             
             case TypeTest.LinearSimple3D:
-                //TODO : update needed
                 SampleCount = 3;
-                Samples = new double[] {1.0f, 1.0f, 2.0f, 3.0f, 3.0f, 3.0f};
-                Outputs = new double[] {1, -1, -1};
+                Samples = new double[] {1.0f, 1.0f, 2.0f, 2.0f, 3.0f, 1.0f};
+                Outputs = new double[] {2, 3, 2.5f};
                 
                 Infos = new TestInfos()
                 {
@@ -194,10 +190,9 @@ public class TestClass
                 break;
             
             case TypeTest.LinearTricky3D:
-                //TODO : update needed
                 SampleCount = 3;
-                Samples = new double[] {1.0f, 1.0f, 2.0f, 3.0f, 3.0f, 3.0f};
-                Outputs = new double[] {1, -1, -1};
+                Samples = new double[] {1.0f, 1.0f, 2.0f, 2.0f, 3.0f, 3.0f};
+                Outputs = new double[] {1, 2, 3};
                 
                 Infos = new TestInfos()
                 {
@@ -208,10 +203,9 @@ public class TestClass
                 break;
             
             case TypeTest.NonLinearSimple3D:
-                //TODO : update needed
-                SampleCount = 3;
-                Samples = new double[] {1.0f, 1.0f, 2.0f, 3.0f, 3.0f, 3.0f};
-                Outputs = new double[] {1, -1, -1};
+                SampleCount = 4;
+                Samples = new double[] {1.0f, 0.0f, 0.0f, 1.0f, 0.0f, 0.0f, 1.0f, 1.0f};
+                Outputs = new double[] {2, 1, -2, -1};
                 
                 Infos = new TestInfos()
                 {

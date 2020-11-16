@@ -6,8 +6,8 @@ public class MlDllEditor : Editor
 {
     private TypeTest type;
     private bool isClassification;
-    private int epoch;
-    private double alpha;
+    private int epoch = 1000;
+    private double alpha = 0.1f;
     
     public override void OnInspectorGUI()
     {
@@ -27,7 +27,7 @@ public class MlDllEditor : Editor
 
         if (GUILayout.Button("SIMULATE TRAINING"))
         {
-            dllRun.Simulate(type);
+            dllRun.Simulate(type, isClassification);
         }
               
     }

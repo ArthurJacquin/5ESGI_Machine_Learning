@@ -3,8 +3,11 @@
 #include <time.h>
 #include <vector>
 #include <exception>
+#include <Eigen/Dense>
 #include "MLP.h"
 #include "../TestMLDLL/Test.h"
+
+using namespace Eigen;
 
 /// <summary>
 /// input = neurones en entrée du perceptron
@@ -57,33 +60,64 @@ extern "C" {
 		return 1.0;
 	}
 
-	__declspec(dllexport) void train_linear_model_Rosenblatt(double* model, double all_samples[], int sample_count, int input_count,
-		double all_expected_outputs[], int epochs, double learning_rate) {
+	__declspec(dllexport) void train_linear_model(double* model, double all_samples[], int sample_count, int input_count,
+		double all_expected_outputs[], int epochs, double learning_rate, bool isClassification) {
 		
 		srand(time(NULL));
-
-		//Repeter epochs fois
-		for (size_t it = 0; it < epochs; it++)
+		
+		if (isClassification)
 		{
-			int k = rand() % (sample_count); //Choix d'un indice random
-			
-			//Recup des inputs (X, Y)
-			double* X = new double[input_count];
-			for (size_t i = 0; i < input_count; i++)
-				X[i] = all_samples[k * input_count + i];
+			//Repeter epochs fois
+			for (size_t it = 0; it < epochs; it++)
+			{
+				int k = rand() % (sample_count); //Choix d'un indice random
 
-			double Y = all_expected_outputs[k]; //Recup du resultat souhaité
-			
-			double p = predict_linear_model_classification(model, X, input_count); //Prediction du résultat
-			
+				//Recup des inputs (X, Y)
+				double* X = new double[input_count];
+				for (size_t i = 0; i < input_count; i++)
+					X[i] = all_samples[k * input_count + i];
+
+				double Y = all_expected_outputs[k]; //Recup du resultat souhaité
+
+				double p = predict_linear_model_classification(model, X, input_count); //Prediction du résultat
+
+				//Mise à jour des poids
+				model[0] = model[0] + learning_rate * (Y - p);
+				for (size_t i = 0; i < input_count; i++)
+				{
+					model[i + 1] = model[i + 1] + learning_rate * (Y - p) * X[i];
+				}
+			}
+		}
+		else
+		{
+			//Pas de biais pour l'instant
+
+			MatrixXd X(input_count, sample_count);
+			for (size_t i = 0; i < sample_count; i++)
+			{
+				for (size_t j = 0; j < input_count; j++)
+				{
+					X(i, j) = all_samples[i * input_count + j];
+				}
+			}
+
+			MatrixXd Y(sample_count, 1);
+			for (size_t i = 0; i < sample_count; i++)
+			{
+				Y(i, 0) = all_expected_outputs[i];
+			}
+
 			//Mise à jour des poids
-			model[0] = model[0] + learning_rate * (Y - p);
 			for (size_t i = 0; i < input_count; i++)
 			{
-				//std::cout << "k : " << k << " | Y : " << Y << " | p : " << p << " | X[i] : " << X[i] << " = " << learning_rate * (Y - p) * X[i] << std::endl;
-
-				model[i + 1] = model[i + 1] + learning_rate * (Y - p) * X[i];
+				MatrixXd Xt = Transpose<MatrixXd>(X);
+				MatrixXd Xi = Inverse<MatrixXd>(Xt * X);
+				MatrixXd m = Xi * Y;
+				std::cout << "M : " << std::endl << Y << std::endl;
+				//model[i + 1] = 
 			}
+
 		}
 
 		return;

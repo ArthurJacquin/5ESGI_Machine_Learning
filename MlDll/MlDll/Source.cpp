@@ -40,10 +40,11 @@ extern "C" {
 		return weights;
 	}
 
+	//--------------------------------------Prédict------------------------------------------
 	/// <summary>
 	/// prédit un output 
 	/// </summary>
-	__declspec(dllexport) double predict_linear_model_classification(double* model, double samples[], int input_count) {
+	__declspec(dllexport) double predict_linear_model(double* model, double samples[], int input_count, bool isClassification) {
 		
 		double sum = model[0]; //poids du biais
 
@@ -53,76 +54,98 @@ extern "C" {
 			sum += samples[i] * model[i + 1];
 		}
 
-		//Sigmoid
-		if(Sign(sum) < 0.5)
-			return -1.0;
-		
-		return 1.0;
+		if (isClassification)
+		{
+			if (Sign(sum) < 0.5)
+				return -1.0;
+			else
+				return 1.0;
+		}
+		else
+		{
+			return sum;
+		}
+	}
+
+	//---------------------------------------Train----------------------------------------------
+	void train_linear_model_classification(double* model, double all_samples[], int sample_count, int input_count,
+		double all_expected_outputs[], int epochs, double learning_rate)
+	{
+		srand(time(NULL));
+
+		//Repeter epochs fois
+		for (size_t it = 0; it < epochs; it++)
+		{
+			int k = rand() % (sample_count); //Choix d'un indice random
+
+			//Recup des inputs (X, Y)
+			double* X = new double[input_count];
+			for (size_t i = 0; i < input_count; i++)
+				X[i] = all_samples[k * input_count + i];
+
+			double Y = all_expected_outputs[k]; //Recup du resultat souhaité
+
+			double p = predict_linear_model(model, X, input_count, true); //Prediction du résultat
+
+			//Mise à jour des poids
+			model[0] = model[0] + learning_rate * (Y - p);
+			for (size_t i = 0; i < input_count; i++)
+			{
+				model[i + 1] = model[i + 1] + learning_rate * (Y - p) * X[i];
+			}
+		}
+	}
+
+	void train_linear_model_regression(double* model, double all_samples[], int sample_count, int input_count,
+		double all_expected_outputs[], int epochs, double learning_rate)
+	{
+		//Matrices avec tout les samples + les biais
+		MatrixXd X(sample_count, input_count + 1);
+		for (size_t i = 0; i < sample_count; i++)
+		{
+			X(i, 0) = 1.0;
+
+			for (size_t j = 0; j < input_count; j++)
+			{
+				X(i, j + 1) = all_samples[i * input_count + j];
+			}
+		}
+		std::cout << "X : " << std::endl << X << std::endl;
+
+		//Matrices avec les outputs attendus
+		MatrixXd Y(sample_count, 1);
+		for (size_t i = 0; i < sample_count; i++)
+		{
+			Y(i, 0) = all_expected_outputs[i];
+		}
+		std::cout << "Y : " << std::endl << Y << std::endl;
+
+		//Matrices pour la mise a jour des poids
+		MatrixXd m = ((X.transpose() * X).inverse() * X.transpose()) * Y;
+		std::cout << "trans : " << std::endl << X.transpose() << std::endl;
+		std::cout << "mul : " << std::endl << X.transpose() * X << std::endl;
+		std::cout << "inverse : " << std::endl << (X.transpose() * X).inverse() << std::endl;
+		std::cout << "M : " << std::endl << m << std::endl;
+
+		//Mise a jour des poids
+		//std::cout << "model : " << std::endl;
+		for (size_t i = 0; i < input_count + 1; i++)
+		{
+			//std::cout << model[i] << std::endl;
+			model[i] /= m(i, 0);
+		}
 	}
 
 	__declspec(dllexport) void train_linear_model(double* model, double all_samples[], int sample_count, int input_count,
 		double all_expected_outputs[], int epochs, double learning_rate, bool isClassification) {
 		
-		srand(time(NULL));
-		
 		if (isClassification)
-		{
-			//Repeter epochs fois
-			for (size_t it = 0; it < epochs; it++)
-			{
-				int k = rand() % (sample_count); //Choix d'un indice random
-
-				//Recup des inputs (X, Y)
-				double* X = new double[input_count];
-				for (size_t i = 0; i < input_count; i++)
-					X[i] = all_samples[k * input_count + i];
-
-				double Y = all_expected_outputs[k]; //Recup du resultat souhaité
-
-				double p = predict_linear_model_classification(model, X, input_count); //Prediction du résultat
-
-				//Mise à jour des poids
-				model[0] = model[0] + learning_rate * (Y - p);
-				for (size_t i = 0; i < input_count; i++)
-				{
-					model[i + 1] = model[i + 1] + learning_rate * (Y - p) * X[i];
-				}
-			}
-		}
+			train_linear_model_classification(model, all_samples, sample_count, input_count, all_expected_outputs, epochs, learning_rate);
 		else
-		{
-			//Pas de biais pour l'instant
-
-			MatrixXd X(input_count, sample_count);
-			for (size_t i = 0; i < sample_count; i++)
-			{
-				for (size_t j = 0; j < input_count; j++)
-				{
-					X(i, j) = all_samples[i * input_count + j];
-				}
-			}
-
-			MatrixXd Y(sample_count, 1);
-			for (size_t i = 0; i < sample_count; i++)
-			{
-				Y(i, 0) = all_expected_outputs[i];
-			}
-
-			//Mise à jour des poids
-			for (size_t i = 0; i < input_count; i++)
-			{
-				MatrixXd Xt = Transpose<MatrixXd>(X);
-				MatrixXd Xi = Inverse<MatrixXd>(Xt * X);
-				MatrixXd m = Xi * Y;
-				std::cout << "M : " << std::endl << Y << std::endl;
-				//model[i + 1] = 
-			}
-
-		}
-
-		return;
+			train_linear_model_regression(model, all_samples, sample_count, input_count, all_expected_outputs, epochs, learning_rate);
 	}
 
+	//-------------------------------------Delete---------------------------------------------
 	__declspec(dllexport) void delete_model(double* model) {
 		delete[] model;
 	}

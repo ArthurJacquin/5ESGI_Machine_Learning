@@ -99,40 +99,47 @@ extern "C" {
 	void train_linear_model_regression(double* model, double all_samples[], int sample_count, int input_count,
 		double all_expected_outputs[], int epochs, double learning_rate)
 	{
-		//Matrices avec tout les samples + les biais
+		// Matrices avec tout les samples + les biais
 		MatrixXd X(sample_count, input_count + 1);
 		for (size_t i = 0; i < sample_count; i++)
 		{
-			X(i, 0) = 1.0;
-
-			for (size_t j = 0; j < input_count; j++)
+			for (size_t j = 0; j < input_count + 1; j++)
 			{
-				X(i, j + 1) = all_samples[i * input_count + j];
+				if (j == 0)
+				{
+					X(i, j) = 1.0;
+				}
+				else
+				{
+					X(i, j) = all_samples[i * input_count + (j - 1)];
+				}
 			}
 		}
 		std::cout << "X : " << std::endl << X << std::endl;
 
-		//Matrices avec les outputs attendus
+		// Matrices avec les outputs attendus
 		MatrixXd Y(sample_count, 1);
 		for (size_t i = 0; i < sample_count; i++)
 		{
-			Y(i, 0) = all_expected_outputs[i];
+			for (int j = 0; j < sizeof(all_expected_outputs); ++j)
+			{
+				Y(i, j) = all_expected_outputs[i * sizeof(all_expected_outputs) + j];
+			}
 		}
 		std::cout << "Y : " << std::endl << Y << std::endl;
 
-		//Matrices pour la mise a jour des poids
-		MatrixXd m = ((X.transpose() * X).inverse() * X.transpose()) * Y;
+		// Matrices pour la mise a jour des poids
+		MatrixXd m((X.transpose() * X).inverse() * X.transpose() * Y);
 		std::cout << "trans : " << std::endl << X.transpose() << std::endl;
 		std::cout << "mul : " << std::endl << X.transpose() * X << std::endl;
 		std::cout << "inverse : " << std::endl << (X.transpose() * X).inverse() << std::endl;
 		std::cout << "M : " << std::endl << m << std::endl;
 
-		//Mise a jour des poids
-		//std::cout << "model : " << std::endl;
-		for (size_t i = 0; i < input_count + 1; i++)
+		// Mise a jour des poids
+		for (size_t i = 0; i < m.size(); i++)
 		{
-			//std::cout << model[i] << std::endl;
-			model[i] /= m(i, 0);
+			model[i] = m(i);
+			std::cout << model[i] << std::endl;
 		}
 	}
 

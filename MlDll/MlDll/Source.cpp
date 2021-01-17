@@ -5,6 +5,7 @@
 #include <exception>
 #include <Eigen/Dense>
 #include "MLP.h"
+#include "RBF.h"
 #include "../TestMLDLL/Test.h"
 
 using namespace Eigen;
@@ -12,6 +13,8 @@ using namespace Eigen;
 /// <summary>
 /// input = neurones en entrée du perceptron
 /// sample = database à tester
+/// dataSize = nombre de composante par data (1 pixel c'est 3 composantes x, y, z)
+/// inputSize = nombre de pixels par image
 /// </summary>
 
 /// <summary>
@@ -368,4 +371,139 @@ extern "C" {
 		return result;
 	}
 }
+#pragma endregion
+
+#pragma region RBF
+//--------------------------------------RBF-------------------------------------------------
+//moyenne des pixels d'une image pour retourner un centre (lloyd algo)
+double* calculateCenter(double* X, int inputSize, int dataSize)
+{
+	double* center = new double[dataSize];
+
+	for (size_t i = 0; i < inputSize; i+= dataSize)
+	{
+		for (size_t j = 0; j < dataSize; j ++)
+		{
+			center[j] += X[j + i];
+		}
+	}
+
+	for (size_t j = 0; j < dataSize; j++)
+	{
+		center[j] = center[j] / inputSize;
+	}
+
+	return center;
+
+}
+
+//fonction gaussienne d'activation => distance entre les centres de l'image center1 et center2 image de test
+//En entrée : deux centre d'images center1 et center2
+double gaussianFunction(double* center1, double* center2, double gamma, int dataSize)
+{
+	double distance = 0.0;
+
+	//calcul de distance
+	for (size_t i = 0; i < dataSize; i++)
+	{
+		distance += pow((center1[i] - center2[i]), 2.0);
+	}
+
+	return exp( - gamma * distance );
+}
+//-------------------------------------------Model-----------------------------------------
+//layer count = 1
+//1 ere partie de model : w 
+//2 eme partie de model : centers
+__declspec(dllexport) double* create_RBF_model(int dims[], int dataSize)
+{
+	int modelSize = ( dims[0] * dims[1] ) + ( dims[0] * dataSize );
+	double* model = new double[modelSize];
+
+	//Init des poids en random
+	int nbWeight = dims[0] * dims[1];
+
+	for (int i = 0; i < nbWeight; ++i)
+	{
+		model[i] = rand() / (double)RAND_MAX * 2.0 - 1.0;
+	}
+
+	for (int i = nbWeight; i < modelSize; i++)
+		model[i] = 0.0;
+
+	return model;
+}
+
+//--------------------------------------Prédict------------------------------------------
+double loydAlgorithm()
+{
+
+}
+
+/// <summary>
+/// predict 
+/// </summary>
+__declspec(dllexport) double predict_RBF_model(double* model, int dims[], int dataSize, double samples[], int inputSize, int outputSize, bool isClassification, float gamma) 
+{
+	RBF* rbf = new RBF(dims, dataSize);
+
+	//init w
+	for (size_t i = 0; i < rbf->wSize; i++)
+	{
+		rbf->w[i] = model[i];
+	}
+
+	//init c
+	for (size_t i = 0; i < rbf->cSize; i++)
+	{
+		rbf->c[i] = model[i + rbf->wSize];
+	}
+
+	double* center1 = calculateCenter(samples, inputSize, dataSize);
+	double* center2 = new double[dataSize];
+
+	double* outputTest = new double[outputSize];
+
+	//somme de tout les centres * poids pour un output
+	//boucle sur les outputs
+	for (size_t k = 0; k < outputSize; k++)
+	{
+		double sum = 0.0;
+		//boucle sur les centres
+		for (size_t i = 0; i < dims[0]; i++)
+		{
+			//boucle sur les composantes de chaque centre (r, g, b)
+			for (size_t j = 0; j < dataSize; j++)
+			{
+				center2[j] = rbf->c[i * dataSize + j];
+			}
+
+			sum += gaussianFunction(center1, center2, gamma, dataSize) * rbf->w[i * outputSize + k];
+		}
+
+		if (isClassification)
+		{
+			outputTest[k] = Sign(sum);
+		}
+		else
+		{
+			outputTest[k] = sum;
+		}
+	}
+
+	double max = 0.;
+	int id = 0;
+	for (size_t i = 0; i < outputSize; i++)
+	{
+		if (outputTest[i] > max)
+		{
+			max = outputTest[i];
+			id = i;
+		}
+	}
+
+	return id;
+}
+
+
 #pragma endregion

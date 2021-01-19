@@ -375,7 +375,21 @@ extern "C" {
 
 #pragma region RBF
 //--------------------------------------RBF-------------------------------------------------
-//moyenne des pixels d'une image pour retourner un centre (lloyd algo)
+void parseSample(std::vector<double*>& data, double* samples, int sampleSize, int inputSize, int dataSize)
+{
+	//boucle sur tous les indices de samples
+	for (size_t i = 0; i < sampleSize; i++)
+	{
+		//boucle sur tous les pixels de l'image
+		data[i] = new double[inputSize * dataSize];
+		for (size_t j = 0; j < inputSize * dataSize; j++)
+		{
+			data[i][j] = samples[i * inputSize * dataSize + j];
+		}
+	}
+}
+
+//moyenne des pixels d'une image pour retourner un centre
 double* calculateCenter(double* X, int inputSize, int dataSize)
 {
 	double* center = new double[dataSize];
@@ -411,6 +425,19 @@ double gaussianFunction(double* center1, double* center2, double gamma, int data
 
 	return exp( - gamma * distance );
 }
+
+//calculate distance
+float distance(double* x1, double* x2, int dataSize)
+{
+	float distance = 0.0;
+	for (size_t i = 0; i < dataSize; i++)
+	{
+		distance += pow(x1[i] - x2[i], 2.0);
+	}
+
+	return sqrt(distance);
+}
+
 //-------------------------------------------Model-----------------------------------------
 //layer count = 1
 //1 ere partie de model : w 
@@ -435,9 +462,61 @@ __declspec(dllexport) double* create_RBF_model(int dims[], int dataSize)
 }
 
 //--------------------------------------Prédict------------------------------------------
-double loydAlgorithm()
+//retourne tableau avec les centres
+//K : nombre de clusters voulus
+std::vector<double*> loydAlgorithm(int K, std::vector<double*> &data, int sampleSize, int inputSize, int dataSize)
 {
+	std::vector<double*> centers;
+	centers.resize(K);
 
+	//initialisation random des centers
+	for (size_t i = 0; i < K; i++)
+	{
+		centers.push_back(calculateCenter(data[rand() % (sampleSize + 1)], inputSize, dataSize));
+	}
+
+	std::vector<double*> dataSumPerCenter;
+	std::vector<int> datasPerCenter;
+
+	//assignation des data aux clusters les plus proches
+	//boucle sur les datas
+	for (size_t d = 0; d < sampleSize; d++)
+	{
+		double* currentCenter = calculateCenter(data[d], inputSize, dataSize);
+		double min = distance(centers[0], currentCenter, dataSize);
+		int minIndex = 0;
+
+		//boucle sur les clusters
+		for (size_t c = 1; c < K; c++)
+		{
+			double dist = distance(centers[c], currentCenter, dataSize);
+			if (dist < min)
+			{
+				min = dist;
+				minIndex = c;
+			}
+		}
+
+		//ajout data dans le cluster le plus proche 
+		for (size_t i = 0; i < dataSize; i++)
+		{
+			dataSumPerCenter[minIndex][i] += currentCenter[i];
+		}
+
+		//une data en plus dans le cluster
+		datasPerCenter[minIndex] += 1;
+	}
+
+	//réassignation : moyenne des centres 
+	for (size_t i = 0; i < K; i++)
+	{
+		for (size_t j = 0; j < dataSize; j++)
+		{
+			centers[i][j] = dataSumPerCenter[i][j] / datasPerCenter[i];
+		}
+	}
+
+	return centers;
 }
 
 /// <summary>

@@ -13,6 +13,7 @@ using namespace Eigen;
 /// <summary>
 /// input = neurones en entrée du perceptron
 /// sample = database à tester
+/// sampleSize = nombres de data dans la database
 /// dataSize = nombre de composante par data (1 pixel c'est 3 composantes x, y, z)
 /// inputSize = nombre de pixels par image
 /// </summary>
@@ -461,10 +462,10 @@ __declspec(dllexport) double* create_RBF_model(int dims[], int dataSize)
 	return model;
 }
 
-//--------------------------------------Prédict------------------------------------------
+//----------------------------------Training--------------------------------------------
 //retourne tableau avec les centres
 //K : nombre de clusters voulus
-std::vector<double*> loydAlgorithm(int K, std::vector<double*> &data, int sampleSize, int inputSize, int dataSize)
+std::vector<double*> loydAlgorithm(int K, std::vector<double*> & samples, int sampleSize, int inputSize, int dataSize)
 {
 	std::vector<double*> centers;
 	centers.resize(K);
@@ -472,7 +473,7 @@ std::vector<double*> loydAlgorithm(int K, std::vector<double*> &data, int sample
 	//initialisation random des centers
 	for (size_t i = 0; i < K; i++)
 	{
-		centers.push_back(calculateCenter(data[rand() % (sampleSize + 1)], inputSize, dataSize));
+		centers.push_back(calculateCenter(samples[rand() % (sampleSize + 1)], inputSize, dataSize));
 	}
 
 	std::vector<double*> dataSumPerCenter;
@@ -482,7 +483,7 @@ std::vector<double*> loydAlgorithm(int K, std::vector<double*> &data, int sample
 	//boucle sur les datas
 	for (size_t d = 0; d < sampleSize; d++)
 	{
-		double* currentCenter = calculateCenter(data[d], inputSize, dataSize);
+		double* currentCenter = calculateCenter(samples[d], inputSize, dataSize);
 		double min = distance(centers[0], currentCenter, dataSize);
 		int minIndex = 0;
 
@@ -519,6 +520,71 @@ std::vector<double*> loydAlgorithm(int K, std::vector<double*> &data, int sample
 	return centers;
 }
 
+//calculate weight
+void calculateWeight(double* &model, int K, int sampleCount, std::vector<double*> lloydCenters, std::vector<double*>& samples, int sampleSize, int inputSize, int dataSize, double gamma, double* output, int outputCount)
+{
+	MatrixXd X(sampleCount, K);
+
+	for (size_t i = 0; i < X.rows(); i++)
+	{
+		for (size_t j = 0; j < X.cols(); j++)
+		{
+			double* center1 = calculateCenter(samples[i], inputSize, dataSize);
+			X(i, j) = gaussianFunction(center1, lloydCenters[j], gamma, dataSize);
+		}
+	}
+
+	MatrixXd outputMat(sampleCount, outputCount);
+
+	for (size_t i = 0; i < outputMat.rows(); i++)
+	{
+		for (size_t j = 0; j < outputMat.cols(); j++)
+		{
+			outputMat(i, j) = output[i * outputCount * j];
+		}
+	}
+
+	VectorXd result = ( X.transpose() * X ).inverse() * X.transpose() * outputMat;
+
+	double* w = new double[K * outputCount];
+	Map< VectorXd>(w, result.size()) = result;
+	
+	for (size_t i = 0; i < K * outputCount; i++)
+	{
+		model[i] = w[i];
+	}
+}
+
+/// <summary>
+/// training 
+/// </summary>
+__declspec(dllexport) double* training_RBF_model(double* model, int dims[], std::vector<double*>& samples, int sampleCount, int sampleSize, int inputSize, int dataSize, int K, double* output, int epoch, double gamma)
+{
+	int K = dims[0];
+	int outputCount = dims[1];
+
+	//initialize center
+	std::vector<double*> lloydCenters = loydAlgorithm(K, samples, sampleSize, inputSize, dataSize);
+
+	//calcule les poids 
+	for (size_t i = 0; i < epoch; i++)
+	{
+		calculateWeight(model, K, sampleCount, lloydCenters, samples, sampleSize, inputSize, dataSize, gamma, output, outputCount);
+	}
+
+	//concatene les centres dans model
+	for (size_t i = K * outputCount; i < K * outputCount + K; i++)
+	{
+		for (size_t j = 0; j < dataSize; j++)
+		{
+			model[i * dataSize + j] = lloydCenters[i - (K * outputCount)][j];
+		}
+	}
+
+	return model;
+}
+
+//--------------------------------------Prédict------------------------------------------
 /// <summary>
 /// predict 
 /// </summary>
@@ -583,6 +649,4 @@ __declspec(dllexport) double predict_RBF_model(double* model, int dims[], int da
 
 	return id;
 }
-
-
 #pragma endregion

@@ -3,8 +3,10 @@
 
 enum TestType {
 	LinearSimple,
+	LinearSimpleMulticlass,
 	LinearMultiple,
 	XOR,
+	XORMulticlass,
 	Cross,
 	MultiLinear,
 	MultiCross,
@@ -18,6 +20,7 @@ enum TestType {
 struct CasTest {
 
 	int sample_count;
+	int datasize;
 
 	double* samples;
 	double* outputs;

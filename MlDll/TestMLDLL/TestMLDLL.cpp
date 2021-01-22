@@ -17,6 +17,11 @@ extern "C"
         int* dims, int layer_count, bool isClassification, int epochs, double alpha);
 	__declspec(dllimport) double* export_result(int type, int layer_count, int* dims,
         int node_count, bool isClassification, int epoch, double alpha);
+
+    //------------------------RBF------------------------------------------------------
+    __declspec(dllimport) double* create_RBF_model(int dims[], int dataSize);
+    __declspec(dllimport) double* training_RBF_model(double* model, int dims[], double* samples, int sampleSize, int inputSize, int dataSize, double* output, int epoch, double gamma);
+    __declspec(dllimport) double predict_RBF_model(double* model, int dims[], double* samples, int inputSize, int dataSize, bool isClassification, float gamma);
 }
 
 int main()
@@ -24,26 +29,17 @@ int main()
     std::cout.precision(5);
     getchar();
 
-    CasTest test(TestType::LinearSimple2D);
+    CasTest test(TestType::XORMulticlass);
     test.DisplayInfos();
 
     //Variables
     int layer_count = 3;
-    int* dims = new int[layer_count] { 2, 3, 1 };
     int epoch = 1000;
     double alpha = 0.1;
     bool isClassification = false;
 
-    int node_count = 0;
-    for (int i = 0; i < layer_count; ++i)
-    {
-        node_count += dims[i];
-    }
-    node_count += layer_count;
-
-
-    //Linear
-#if 1
+    //-------------------------------------Linear-----------------------------------------
+#if 0
     //Creation du model
     int input_count = 2;
     double* model = create_linear_model(input_count);
@@ -63,8 +59,16 @@ int main()
     }
 #endif
 
-    //MLP
+    //-------------------------------------MLP-----------------------------------------
 #if 0
+    int* dims = new int[layer_count] { 2, 3, 1 };
+    int node_count = 0;
+    for (int i = 0; i < layer_count; ++i)
+    {
+        node_count += dims[i];
+    }
+    node_count += layer_count;
+
     //Creation du model
     double* model = create_MLP_model(dims, layer_count);
 
@@ -84,24 +88,33 @@ int main()
         std::cout << " resultat : " << result[node_count - 1] << std::endl;
     }
 
-#endif 
+#endif
+
+    //-------------------------------------RBF-----------------------------------------
+#if 1
+    int* dims = new int[2] { 4, 2 };
+    int inputSize = 1;
+    float gamma = 0.5; //VALEUR MISE AU PIF
+
+    double* model = create_RBF_model(dims, test.datasize);
+
+    std::cout << "BEFORE TRAINING !" << std::endl;
+    for (size_t i = 0; i < test.sample_count; i++)
+    {
+        double result = predict_RBF_model(model, dims, new double[2]{ test.samples[i * 2], test.samples[i * 2 + 1] }, inputSize, test.datasize, isClassification, gamma);
+        std::cout << " resultat : " << result << std::endl;
+    }
+
+    training_RBF_model(model, dims, test.samples, test.sample_count, inputSize, test.datasize, test.outputs, epoch, gamma);
+
+    std::cout << "AFTER TRAINING !" << std::endl;
+    for (size_t i = 0; i < test.sample_count; i++)
+    {
+        double result = predict_RBF_model(model, dims, new double[2]{ test.samples[i * 2], test.samples[i * 2 + 1] }, inputSize, test.datasize, isClassification, gamma);
+        std::cout << " resultat : " << result << std::endl;
+    }
+
+#endif
 
     delete_model(model);
-
-   /*int layer_count = 3;
-    int* dims = new int[layer_count] { 2, 3, 1 };
-    int node_count = 0;
-    for (int i = 0; i < layer_count; ++i)
-    {
-        node_count += dims[i];
-    }
-    node_count += layer_count;
-
-	double* exportResults = export_result(2, layer_count, dims, node_count, true, 1000, 0.1);
-
-	for (size_t i = 0; i < 4; i++)
-    {
-        std::cout << " resultat : " << exportResults[i] << std::endl;
-    }
-	return 0;*/
 }

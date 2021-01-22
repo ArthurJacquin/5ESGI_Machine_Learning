@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Runtime.InteropServices;
+using Save;
 using UnityEngine;
 
 public class MlDllRun : MonoBehaviour
@@ -11,16 +12,39 @@ public class MlDllRun : MonoBehaviour
     [SerializeField] private Material blueMat;
     //[SerializeField] private List<int> dimensions;
     
-    public void RunMlDll(TypeTest type, bool isClassification, int epoch, double alpha)
+    public void RunMlDll(TypeModel model, TypeTest type, bool isClassification, int epoch, double alpha)
     {
         //Initialisation des infos du test en fonction de son type
         var test = new TestClass(type);
         //test.DisplayInfos();
-        
-        //Récupération des résultats via la dll
-        var results = MlDllWrapper.TrainMlp(test.SampleCount, test.Samples, test.Outputs, 
-            test.Infos.LayerCount, test.Infos.Dimensions, test.NodeCount, isClassification, epoch, alpha);
 
+        IntPtr results;
+        
+        //TODO : Selon le modèle, appeler la bonne fonction de la dll
+        switch (model)
+        {
+            case TypeModel.Linear:
+                //Récupération des résultats via la dll
+                results = MlDllWrapper.TrainMlp(test.SampleCount, test.Samples, test.Outputs, 
+                    test.Infos.LayerCount, test.Infos.Dimensions, test.NodeCount, isClassification, epoch, alpha);
+                break;
+            
+            case TypeModel.MLP:
+                results = MlDllWrapper.TrainMlp(test.SampleCount, test.Samples, test.Outputs, 
+                    test.Infos.LayerCount, test.Infos.Dimensions, test.NodeCount, isClassification, epoch, alpha);
+                break;
+            
+            case TypeModel.RBF:
+                results = MlDllWrapper.TrainMlp(test.SampleCount, test.Samples, test.Outputs, 
+                    test.Infos.LayerCount, test.Infos.Dimensions, test.NodeCount, isClassification, epoch, alpha);
+                break;
+            
+            default:
+                results = MlDllWrapper.TrainMlp(test.SampleCount, test.Samples, test.Outputs, 
+                    test.Infos.LayerCount, test.Infos.Dimensions, test.NodeCount, isClassification, epoch, alpha);
+                break;
+        }
+        
         //Gestion des résultats
         var managedResults = new double[test.Infos.OutputSize];
         Marshal.Copy(results, managedResults, 0, test.Infos.OutputSize);
@@ -31,7 +55,7 @@ public class MlDllRun : MonoBehaviour
         //test.DisplayResults();
     }
 
-    public void Simulate(TypeTest type, bool isClassification)
+    public void Simulate(TypeModel model, TypeTest type, bool isClassification)
     {
         var test = new TestClass(type);
         UpdateVisualResults(test, test.Outputs, isClassification);

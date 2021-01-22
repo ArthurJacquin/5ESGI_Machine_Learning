@@ -49,7 +49,7 @@ extern "C" {
 	/// prédit un output 
 	/// </summary>
 	__declspec(dllexport) double predict_linear_model(double* model, double samples[], int input_count, bool isClassification) {
-		
+
 		double sum = model[0]; //poids du biais
 
 		//somme de tout les samples * poids
@@ -142,7 +142,7 @@ extern "C" {
 
 	__declspec(dllexport) void train_linear_model(double* model, double all_samples[], int sample_count, int input_count,
 		double all_expected_outputs[], int epochs, double learning_rate, bool isClassification) {
-		
+
 		if (isClassification)
 			train_linear_model_classification(model, all_samples, sample_count, input_count, all_expected_outputs, epochs, learning_rate);
 		else
@@ -158,15 +158,15 @@ extern "C" {
 #pragma region MLP
 	//--------------------------------------MLP-------------------------------------------------
 	__declspec(dllexport) double* create_MLP_model(int dims[], int layer_count) {
-		
+
 		//Nombre total de poids
 		int nbWeight = 0;
 		for (size_t l = 1; l < layer_count; l++)
 		{
 			nbWeight += dims[l] * (dims[l - 1] + 1);
 		}
-		std::cout << "nbWeight "<<nbWeight << std::endl;
-		
+		std::cout << "nbWeight " << nbWeight << std::endl;
+
 		//Init des poids en random
 		double* w = new double[nbWeight];
 		for (int i = 0; i < nbWeight; ++i)
@@ -187,7 +187,7 @@ extern "C" {
 	/// [N - 1] -> nb outputs
 	///  </param>
 	/// <param name="isClassification">classification ou regression</param>
-	__declspec(dllexport) double* predict_MLP(double* model,  double samples[], int* dims, int layer_count, bool isClassification)
+	__declspec(dllexport) double* predict_MLP(double* model, double samples[], int* dims, int layer_count, bool isClassification)
 	{
 		MLP* mlp = new MLP(model, dims, layer_count);
 		mlp->d = dims;
@@ -355,7 +355,7 @@ extern "C" {
 		for (size_t i = 0; i < sample_count; i++)
 		{
 			double* result_tmp = predict_MLP(model, new double[2]{ samples[i * 2], samples[i * 2 + 1] }, dims, layer_count, isClassification);
-			if(dims[layer_count - 1] == 1)
+			if (dims[layer_count - 1] == 1)
 			{
 				result[i] = result_tmp[node_count - 1];
 			}
@@ -364,289 +364,324 @@ extern "C" {
 				//TODO : faire des trucs
 				result[i] = result_tmp[node_count - 1];
 			}
-			
+
 		}
 
 		delete_model(model);
-		
+
 		return result;
 	}
-}
 #pragma endregion
 
 #pragma region RBF
-//--------------------------------------RBF-------------------------------------------------
-void parseSample(std::vector<double*>& data, double* samples, int sampleSize, int inputSize, int dataSize)
-{
-	//boucle sur tous les indices de samples
-	for (size_t i = 0; i < sampleSize; i++)
+	//--------------------------------------RBF-------------------------------------------------
+
+	/// <summary>
+	/// Parse les informations dans samples pour facilité l'utilisation
+	/// </summary>
+	void parseSample(std::vector<double*>& data, double* samples, int sampleSize, int inputSize, int dataSize)
 	{
-		//boucle sur tous les pixels de l'image
-		data[i] = new double[inputSize * dataSize];
-		for (size_t j = 0; j < inputSize * dataSize; j++)
+		data.resize(sampleSize);
+		//boucle sur tous les indices de samples
+		for (size_t i = 0; i < sampleSize; i++)
 		{
-			data[i][j] = samples[i * inputSize * dataSize + j];
-		}
-	}
-}
-
-//moyenne des pixels d'une image pour retourner un centre
-double* calculateCenter(double* X, int inputSize, int dataSize)
-{
-	double* center = new double[dataSize];
-
-	for (size_t i = 0; i < inputSize; i+= dataSize)
-	{
-		for (size_t j = 0; j < dataSize; j ++)
-		{
-			center[j] += X[j + i];
-		}
-	}
-
-	for (size_t j = 0; j < dataSize; j++)
-	{
-		center[j] = center[j] / inputSize;
-	}
-
-	return center;
-
-}
-
-//fonction gaussienne d'activation => distance entre les centres de l'image center1 et center2 image de test
-//En entrée : deux centre d'images center1 et center2
-double gaussianFunction(double* center1, double* center2, double gamma, int dataSize)
-{
-	double distance = 0.0;
-
-	//calcul de distance
-	for (size_t i = 0; i < dataSize; i++)
-	{
-		distance += pow((center1[i] - center2[i]), 2.0);
-	}
-
-	return exp( - gamma * distance );
-}
-
-//calculate distance
-float distance(double* x1, double* x2, int dataSize)
-{
-	float distance = 0.0;
-	for (size_t i = 0; i < dataSize; i++)
-	{
-		distance += pow(x1[i] - x2[i], 2.0);
-	}
-
-	return sqrt(distance);
-}
-
-//-------------------------------------------Model-----------------------------------------
-//layer count = 1
-//1 ere partie de model : w 
-//2 eme partie de model : centers
-__declspec(dllexport) double* create_RBF_model(int dims[], int dataSize)
-{
-	int modelSize = ( dims[0] * dims[1] ) + ( dims[0] * dataSize );
-	double* model = new double[modelSize];
-
-	//Init des poids en random
-	int nbWeight = dims[0] * dims[1];
-
-	for (int i = 0; i < nbWeight; ++i)
-	{
-		model[i] = rand() / (double)RAND_MAX * 2.0 - 1.0;
-	}
-
-	for (int i = nbWeight; i < modelSize; i++)
-		model[i] = 0.0;
-
-	return model;
-}
-
-//----------------------------------Training--------------------------------------------
-//retourne tableau avec les centres
-//K : nombre de clusters voulus
-std::vector<double*> loydAlgorithm(int K, std::vector<double*> & samples, int sampleSize, int inputSize, int dataSize)
-{
-	std::vector<double*> centers;
-	centers.resize(K);
-
-	//initialisation random des centers
-	for (size_t i = 0; i < K; i++)
-	{
-		centers.push_back(calculateCenter(samples[rand() % (sampleSize + 1)], inputSize, dataSize));
-	}
-
-	std::vector<double*> dataSumPerCenter;
-	std::vector<int> datasPerCenter;
-
-	//assignation des data aux clusters les plus proches
-	//boucle sur les datas
-	for (size_t d = 0; d < sampleSize; d++)
-	{
-		double* currentCenter = calculateCenter(samples[d], inputSize, dataSize);
-		double min = distance(centers[0], currentCenter, dataSize);
-		int minIndex = 0;
-
-		//boucle sur les clusters
-		for (size_t c = 1; c < K; c++)
-		{
-			double dist = distance(centers[c], currentCenter, dataSize);
-			if (dist < min)
+			//boucle sur tous les pixels de l'image
+			data[i] = new double[inputSize * dataSize];
+			for (size_t j = 0; j < inputSize * dataSize; j++)
 			{
-				min = dist;
-				minIndex = c;
+				data[i][j] = samples[i * inputSize * dataSize + j];
 			}
 		}
-
-		//ajout data dans le cluster le plus proche 
-		for (size_t i = 0; i < dataSize; i++)
-		{
-			dataSumPerCenter[minIndex][i] += currentCenter[i];
-		}
-
-		//une data en plus dans le cluster
-		datasPerCenter[minIndex] += 1;
 	}
 
-	//réassignation : moyenne des centres 
-	for (size_t i = 0; i < K; i++)
+	/// <summary>
+	/// Moyenne des pixels d'une image pour retourner un centre
+	/// </summary>
+	double* calculateCenter(double* X, int inputSize, int dataSize)
 	{
+		double* center = new double[dataSize];
+		//std::cout << "DataSize : " << dataSize << " | InputSize : " << inputSize << std::endl;
+
+		//Init center
 		for (size_t j = 0; j < dataSize; j++)
 		{
-			centers[i][j] = dataSumPerCenter[i][j] / datasPerCenter[i];
+			center[j] = 0.0;
 		}
-	}
 
-	return centers;
-}
-
-//calculate weight
-void calculateWeight(double* &model, int K, int sampleCount, std::vector<double*> lloydCenters, std::vector<double*>& samples, int sampleSize, int inputSize, int dataSize, double gamma, double* output, int outputCount)
-{
-	MatrixXd X(sampleCount, K);
-
-	for (size_t i = 0; i < X.rows(); i++)
-	{
-		for (size_t j = 0; j < X.cols(); j++)
+		for (size_t i = 0; i < inputSize; i += dataSize)
 		{
-			double* center1 = calculateCenter(samples[i], inputSize, dataSize);
-			X(i, j) = gaussianFunction(center1, lloydCenters[j], gamma, dataSize);
-		}
-	}
-
-	MatrixXd outputMat(sampleCount, outputCount);
-
-	for (size_t i = 0; i < outputMat.rows(); i++)
-	{
-		for (size_t j = 0; j < outputMat.cols(); j++)
-		{
-			outputMat(i, j) = output[i * outputCount * j];
-		}
-	}
-
-	VectorXd result = ( X.transpose() * X ).inverse() * X.transpose() * outputMat;
-
-	double* w = new double[K * outputCount];
-	Map< VectorXd>(w, result.size()) = result;
-	
-	for (size_t i = 0; i < K * outputCount; i++)
-	{
-		model[i] = w[i];
-	}
-}
-
-/// <summary>
-/// training 
-/// </summary>
-__declspec(dllexport) double* training_RBF_model(double* model, int dims[], std::vector<double*>& samples, int sampleCount, int sampleSize, int inputSize, int dataSize, int K, double* output, int epoch, double gamma)
-{
-	int K = dims[0];
-	int outputCount = dims[1];
-
-	//initialize center
-	std::vector<double*> lloydCenters = loydAlgorithm(K, samples, sampleSize, inputSize, dataSize);
-
-	//calcule les poids 
-	for (size_t i = 0; i < epoch; i++)
-	{
-		calculateWeight(model, K, sampleCount, lloydCenters, samples, sampleSize, inputSize, dataSize, gamma, output, outputCount);
-	}
-
-	//concatene les centres dans model
-	for (size_t i = K * outputCount; i < K * outputCount + K; i++)
-	{
-		for (size_t j = 0; j < dataSize; j++)
-		{
-			model[i * dataSize + j] = lloydCenters[i - (K * outputCount)][j];
-		}
-	}
-
-	return model;
-}
-
-//--------------------------------------Prédict------------------------------------------
-/// <summary>
-/// predict 
-/// </summary>
-__declspec(dllexport) double predict_RBF_model(double* model, int dims[], int dataSize, double samples[], int inputSize, int outputSize, bool isClassification, float gamma) 
-{
-	RBF* rbf = new RBF(dims, dataSize);
-
-	//init w
-	for (size_t i = 0; i < rbf->wSize; i++)
-	{
-		rbf->w[i] = model[i];
-	}
-
-	//init c
-	for (size_t i = 0; i < rbf->cSize; i++)
-	{
-		rbf->c[i] = model[i + rbf->wSize];
-	}
-
-	double* center1 = calculateCenter(samples, inputSize, dataSize);
-	double* center2 = new double[dataSize];
-
-	double* outputTest = new double[outputSize];
-
-	//somme de tout les centres * poids pour un output
-	//boucle sur les outputs
-	for (size_t k = 0; k < outputSize; k++)
-	{
-		double sum = 0.0;
-		//boucle sur les centres
-		for (size_t i = 0; i < dims[0]; i++)
-		{
-			//boucle sur les composantes de chaque centre (r, g, b)
 			for (size_t j = 0; j < dataSize; j++)
 			{
-				center2[j] = rbf->c[i * dataSize + j];
+
+				//std::cout << "I : " << i << " | J : " << j << " | X[j + i] : " << X[i * dataSize + j] << std::endl;
+				center[j] += X[i * dataSize + j];
+			}
+		}
+
+		for (size_t j = 0; j < dataSize; j++)
+		{
+			center[j] = center[j] / inputSize;
+		}
+
+		return center;
+
+	}
+
+	/// <summary>
+	/// Fonction gaussienne d'activation => distance entre les centres de l'image center1 et center2 image de test
+	/// En entrée : deux centre d'images center1 et center2
+	/// </summary>
+	double gaussianFunction(double* center1, double* center2, double gamma, int dataSize)
+	{
+		double distance = 0.0;
+
+		//calcul de distance
+		for (size_t i = 0; i < dataSize; i++)
+		{
+			distance += pow((center1[i] - center2[i]), 2.0);
+		}
+
+		return exp(-gamma * distance);
+	}
+
+	/// <summary>
+	/// Calcule la distance entre 2 centres
+	/// </summary>
+	float distance(double* x1, double* x2, int dataSize)
+	{
+		float distance = 0.0;
+		for (size_t i = 0; i < dataSize; i++)
+		{
+			distance += pow(x1[i] - x2[i], 2.0);
+		}
+
+		return sqrt(distance);
+	}
+
+	//----------------------------------TRAINING FUNCTIONS--------------------------------------------
+	/// <summary>
+	/// Retourne tableau avec les centres
+	/// K : nombre de clusters voulus
+	/// </summary>
+	std::vector<double*> lloydAlgorithm(std::vector<double*>& samples, int K, int sampleSize, int inputSize, int dataSize)
+	{
+		std::cout << "---------------Lloyd algo--------------------" << std::endl;
+		std::vector<double*> centers;
+		centers.resize(K);
+
+		//initialisation random des centers
+		for (size_t i = 0; i < K; i++)
+		{
+			centers.push_back(calculateCenter(samples[rand() % (sampleSize)], inputSize, dataSize));
+		}
+
+		std::vector<double*> dataSumPerCenter;
+		std::vector<int> datasPerCenter;
+
+		//assignation des data aux clusters les plus proches
+		//boucle sur les datas
+		for (size_t d = 0; d < sampleSize; d++)
+		{
+			double* currentCenter = calculateCenter(samples[d], inputSize, dataSize);
+			double min = distance(centers[0], currentCenter, dataSize);
+			int minIndex = 0;
+
+			//boucle sur les clusters
+			for (size_t c = 1; c < K; c++)
+			{
+				double dist = distance(centers[c], currentCenter, dataSize);
+				if (dist < min)
+				{
+					min = dist;
+					minIndex = c;
+				}
 			}
 
-			sum += gaussianFunction(center1, center2, gamma, dataSize) * rbf->w[i * outputSize + k];
+			//ajout data dans le cluster le plus proche 
+			for (size_t i = 0; i < dataSize; i++)
+			{
+				dataSumPerCenter[minIndex][i] += currentCenter[i];
+			}
+
+			//une data en plus dans le cluster
+			datasPerCenter[minIndex] += 1;
 		}
 
-		if (isClassification)
+		//réassignation : moyenne des centres 
+		for (size_t i = 0; i < K; i++)
 		{
-			outputTest[k] = Sign(sum);
+			for (size_t j = 0; j < dataSize; j++)
+			{
+				centers[i][j] = dataSumPerCenter[i][j] / datasPerCenter[i];
+			}
 		}
-		else
-		{
-			outputTest[k] = sum;
-		}
+
+		return centers;
 	}
 
-	double max = 0.;
-	int id = 0;
-	for (size_t i = 0; i < outputSize; i++)
+	/// <summary>
+	/// Calcule les points en fonctions des centres précalculés et des outputs souhaités
+	/// </summary>
+	void calculateWeight(double*& model, int K, int sampleSize, std::vector<double*> lloydCenters, std::vector<double*>& samples, int inputSize, int dataSize, double gamma, double* output, int outputCount)
 	{
-		if (outputTest[i] > max)
+		std::cout << "---------------Weights Update--------------------" << std::endl;
+		MatrixXd X(sampleSize, K);
+
+		for (size_t i = 0; i < X.rows(); i++)
 		{
-			max = outputTest[i];
-			id = i;
+			for (size_t j = 0; j < X.cols(); j++)
+			{
+				double* center1 = calculateCenter(samples[i], inputSize, dataSize);
+				X(i, j) = gaussianFunction(center1, lloydCenters[j], gamma, dataSize);
+			}
+		}
+
+		MatrixXd outputMat(sampleSize, outputCount);
+
+		for (size_t i = 0; i < outputMat.rows(); i++)
+		{
+			for (size_t j = 0; j < outputMat.cols(); j++)
+			{
+				outputMat(i, j) = output[i * outputCount * j];
+			}
+		}
+
+		VectorXd result = (X.transpose() * X).inverse() * X.transpose() * outputMat;
+
+		double* w = new double[K * outputCount];
+		Map< VectorXd>(w, result.size()) = result;
+
+		for (size_t i = 0; i < K * outputCount; i++)
+		{
+			model[i] = w[i];
 		}
 	}
 
-	return id;
-}
+	//--------------------------------------EXPORTED FUNCTIONS-------------------------------------------------
+
+	//layer count = 1
+	//1 ere partie de model : w 
+	//2 eme partie de model : centers
+	__declspec(dllexport) double* create_RBF_model(int dims[], int dataSize)
+	{
+		std::cout << "---------------Model creation--------------------" << std::endl;
+		int modelSize = (dims[0] * dims[1]) + (dims[0] * dataSize);
+		double* model = new double[modelSize];
+
+		//Init des poids en random
+		int nbWeight = dims[0] * dims[1];
+
+		for (int i = 0; i < nbWeight; ++i)
+		{
+			model[i] = rand() / (double)RAND_MAX * 2.0 - 1.0;
+		}
+
+		for (int i = nbWeight; i < modelSize; i++)
+			model[i] = 0.0;
+
+		return model;
+	}
+
+	/// <summary>
+	/// training 
+	/// </summary>
+	__declspec(dllexport) double* training_RBF_model(double* model, int dims[], double* samples, int sampleSize, int inputSize, int dataSize, double* output, int epoch, double gamma)
+	{
+		std::cout << "---------------TRAINING--------------------" << std::endl;
+		//Parse samples
+		std::vector<double*> data;
+		parseSample(data, samples, sampleSize, inputSize, dataSize);
+
+		int K = dims[0];
+		int outputCount = dims[1];
+
+		//initialize center
+		std::vector<double*> lloydCenters = lloydAlgorithm(data, K, sampleSize, inputSize, dataSize);
+
+		//calcule les poids 
+		for (size_t i = 0; i < epoch; i++)
+		{
+			calculateWeight(model, K, sampleSize, lloydCenters, data, inputSize, dataSize, gamma, output, outputCount);
+		}
+
+		//concatene les centres dans model
+		for (size_t i = K * outputCount; i < K * outputCount + K; i++)
+		{
+			for (size_t j = 0; j < dataSize; j++)
+			{
+				model[i * dataSize + j] = lloydCenters[i - (K * outputCount)][j];
+			}
+		}
+
+		return model;
+	}
+
+	/// <summary>
+	/// predict 
+	/// </summary>
+	__declspec(dllexport) double predict_RBF_model(double* model, int dims[], double* samples, int inputSize, int dataSize, bool isClassification, float gamma)
+	{
+		std::cout << "---------------PREDICT--------------------" << std::endl;
+		int outputSize = dims[1];
+		RBF* rbf = new RBF(dims, dataSize);
+
+		//init w
+		for (size_t i = 0; i < rbf->wSize; i++)
+		{
+			rbf->w[i] = model[i];
+		}
+
+		//init c
+		for (size_t i = 0; i < rbf->cSize; i++)
+		{
+			rbf->c[i] = model[i + rbf->wSize];
+		}
+
+		double* center1 = calculateCenter(samples, inputSize, dataSize);
+		double* center2 = new double[dataSize];
+
+		double* outputTest = new double[outputSize];
+
+		//somme de tout les centres * poids pour un output
+		//boucle sur les outputs
+		for (size_t k = 0; k < outputSize; k++)
+		{
+			double sum = 0.0;
+			//boucle sur les centres
+			for (size_t i = 0; i < dims[0]; i++)
+			{
+				//boucle sur les composantes de chaque centre (r, g, b)
+				for (size_t j = 0; j < dataSize; j++)
+				{
+					center2[j] = rbf->c[i * dataSize + j];
+				}
+
+				sum += gaussianFunction(center1, center2, gamma, dataSize) * rbf->w[i * outputSize + k];
+			}
+
+			if (isClassification)
+			{
+				outputTest[k] = Sign(sum);
+			}
+			else
+			{
+				outputTest[k] = sum;
+			}
+		}
+
+		double max = 0.;
+		int id = 0;
+		for (size_t i = 0; i < outputSize; i++)
+		{
+			if (outputTest[i] > max)
+			{
+				max = outputTest[i];
+				id = i;
+			}
+		}
+
+		return id;
+	}
+
 #pragma endregion
+}

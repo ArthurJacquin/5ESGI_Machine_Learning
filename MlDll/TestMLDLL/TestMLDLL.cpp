@@ -29,7 +29,7 @@ int main()
     std::cout.precision(5);
     getchar();
 
-    CasTest test(TestType::LinearSimple2D);
+    CasTest test(TestType::XORMulticlass);
     test.DisplayInfos();
 
     //Variables
@@ -37,7 +37,6 @@ int main()
     int epoch = 1000;
     double alpha = 0.1;
     bool isClassification = false;
-
 
     //-------------------------------------Linear-----------------------------------------
 #if 0
@@ -93,32 +92,29 @@ int main()
 
     //-------------------------------------RBF-----------------------------------------
 #if 1
-    int* dims = new int[2] { 300, 2 };
+    int* dims = new int[2] { 4, 2 };
     int inputSize = 1;
-    int datasize = 2;
     float gamma = 0.5; //VALEUR MISE AU PIF
 
-    double* model = create_RBF_model(dims, datasize);
+    double* model = create_RBF_model(dims, test.datasize);
 
     std::cout << "BEFORE TRAINING !" << std::endl;
     for (size_t i = 0; i < test.sample_count; i++)
     {
-        double result = predict_RBF_model(model, dims, new double[2]{ test.samples[i * 2], test.samples[i * 2 + 1] }, inputSize, datasize, isClassification, gamma);
+        double result = predict_RBF_model(model, dims, new double[2]{ test.samples[i * 2], test.samples[i * 2 + 1] }, inputSize, test.datasize, isClassification, gamma);
         std::cout << " resultat : " << result << std::endl;
     }
 
-    training_RBF_model(model, dims, test.samples, test.sample_count, inputSize, datasize, test.outputs, epoch, gamma);
+    training_RBF_model(model, dims, test.samples, test.sample_count, inputSize, test.datasize, test.outputs, epoch, gamma);
 
     std::cout << "AFTER TRAINING !" << std::endl;
     for (size_t i = 0; i < test.sample_count; i++)
     {
-        double result = predict_RBF_model(model, dims, new double[2]{ test.samples[i * 2], test.samples[i * 2 + 1] }, inputSize, datasize, isClassification, gamma);
+        double result = predict_RBF_model(model, dims, new double[2]{ test.samples[i * 2], test.samples[i * 2 + 1] }, inputSize, test.datasize, isClassification, gamma);
         std::cout << " resultat : " << result << std::endl;
     }
 
 #endif
 
     delete_model(model);
-
-	return 0;
 }

@@ -26,6 +26,44 @@ double Sign(double x)
 	return 1 / (1 + exp(-x));
 }
 
+#pragma region DEBUG
+	template<typename T>
+	void print(T var, std::string name)
+	{
+		std::cout << name << " :\n" << var << std::endl;
+	}
+
+	void printVectorDouble(std::vector<double*> a, int datasize, std::string name)
+	{
+		std::cout << "-->" << name << std::endl;
+		for (size_t i = 0; i < a.size(); i++)
+		{
+			std::cout << "(";
+			for (size_t j = 0; j < datasize - 1; j++)
+			{
+				std::cout << a[i][j] << ", ";
+			}
+
+			std::cout << a[i][datasize - 1] << ")" << std::endl;
+		}
+	}
+
+	void printArray(double* a, int size, int datasize, std::string name)
+	{
+		std::cout << "-->" << name << std::endl;
+		for (size_t i = 0; i < size; i++)
+		{
+			std::cout << "(";
+			for (size_t j = 0; j < datasize - 1; j++)
+			{
+				std::cout << a[i * datasize + j] << ", ";
+			}
+
+			std::cout << a[i * datasize + datasize - 1] << ")" << std::endl;
+		}
+	}
+#pragma endregion
+
 extern "C" {
 
 #pragma region Linear
@@ -465,18 +503,31 @@ extern "C" {
 	/// </summary>
 	std::vector<double*> lloydAlgorithm(std::vector<double*>& samples, int K, int sampleSize, int inputSize, int dataSize)
 	{
-		std::cout << "---------------Lloyd algo--------------------" << std::endl;
 		std::vector<double*> centers;
-		centers.resize(K);
 
 		//initialisation random des centers
 		for (size_t i = 0; i < K; i++)
 		{
-			centers.push_back(calculateCenter(samples[rand() % (sampleSize)], inputSize, dataSize));
+			centers.push_back(calculateCenter(samples[i], inputSize, dataSize));
+			//centers.push_back(calculateCenter(samples[rand() % (sampleSize)], inputSize, dataSize));
 		}
 
-		std::vector<double*> dataSumPerCenter;
-		std::vector<int> datasPerCenter;
+		std::vector<double*> dataSumPerCenter; //Somme de tout les samples dans chaque cluster
+		std::vector<int> datasPerCenter; //Nombre de samples dans chaque cluster
+
+		//Initialisation des tableaux
+		dataSumPerCenter.resize(K);
+		datasPerCenter.resize(K);
+		for (size_t i = 0; i < K; ++i)
+		{
+			dataSumPerCenter[i] = new double[dataSize];
+			for (size_t j = 0; j < dataSize; ++j)
+			{
+				dataSumPerCenter[i][j] = 0.0;
+			}
+
+			datasPerCenter[i] = 0;
+		}
 
 		//assignation des data aux clusters les plus proches
 		//boucle sur les datas
@@ -500,6 +551,7 @@ extern "C" {
 			//ajout data dans le cluster le plus proche 
 			for (size_t i = 0; i < dataSize; i++)
 			{
+				//std::cout << "minIndex : " << minIndex << " | dataSumPerCenter : " << dataSumPerCenter.size()  << " | i : " << i << std::endl;
 				dataSumPerCenter[minIndex][i] += currentCenter[i];
 			}
 
@@ -516,7 +568,7 @@ extern "C" {
 			}
 		}
 
-		return centers;
+ 		return centers;
 	}
 
 	/// <summary>
@@ -524,7 +576,6 @@ extern "C" {
 	/// </summary>
 	void calculateWeight(double*& model, int K, int sampleSize, std::vector<double*> lloydCenters, std::vector<double*>& samples, int inputSize, int dataSize, double gamma, double* output, int outputCount)
 	{
-		std::cout << "---------------Weights Update--------------------" << std::endl;
 		MatrixXd X(sampleSize, K);
 
 		for (size_t i = 0; i < X.rows(); i++)
@@ -542,18 +593,18 @@ extern "C" {
 		{
 			for (size_t j = 0; j < outputMat.cols(); j++)
 			{
-				outputMat(i, j) = output[i * outputCount * j];
+				outputMat(i, j) = output[i * outputCount + j];
 			}
 		}
 
-		VectorXd result = (X.transpose() * X).inverse() * X.transpose() * outputMat;
-
-		double* w = new double[K * outputCount];
-		Map< VectorXd>(w, result.size()) = result;
-
-		for (size_t i = 0; i < K * outputCount; i++)
+		MatrixXd result = (X.transpose() * X).inverse() * X.transpose() * outputMat;
+		
+		for (size_t i = 0; i < result.rows(); i++)
 		{
-			model[i] = w[i];
+			for (size_t j = 0; j < result.cols(); j++)
+			{
+				model[i * result.cols() + j] = result(i, j);
+			}
 		}
 	}
 
@@ -588,6 +639,8 @@ extern "C" {
 	__declspec(dllexport) double* training_RBF_model(double* model, int dims[], double* samples, int sampleSize, int inputSize, int dataSize, double* output, int epoch, double gamma)
 	{
 		std::cout << "---------------TRAINING--------------------" << std::endl;
+		
+		std::cout << "---------------Parsing--------------------" << std::endl;
 		//Parse samples
 		std::vector<double*> data;
 		parseSample(data, samples, sampleSize, inputSize, dataSize);
@@ -595,21 +648,26 @@ extern "C" {
 		int K = dims[0];
 		int outputCount = dims[1];
 
+		std::cout << "---------------Lloyd algo--------------------" << std::endl;
 		//initialize center
 		std::vector<double*> lloydCenters = lloydAlgorithm(data, K, sampleSize, inputSize, dataSize);
+		printVectorDouble(lloydCenters, dataSize, "centers");
 
+		std::cout << "---------------Weights Update--------------------" << std::endl;
 		//calcule les poids 
 		for (size_t i = 0; i < epoch; i++)
 		{
 			calculateWeight(model, K, sampleSize, lloydCenters, data, inputSize, dataSize, gamma, output, outputCount);
 		}
 
+		printArray(model, K, dataSize, "Weights");
+
 		//concatene les centres dans model
-		for (size_t i = K * outputCount; i < K * outputCount + K; i++)
+		for (size_t i = 0; i < K; i++)
 		{
 			for (size_t j = 0; j < dataSize; j++)
 			{
-				model[i * dataSize + j] = lloydCenters[i - (K * outputCount)][j];
+				model[K * outputCount + i * dataSize + j] = lloydCenters[i][j];
 			}
 		}
 

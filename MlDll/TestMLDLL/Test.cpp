@@ -5,12 +5,20 @@
 CasTest::CasTest(TestType t)
 {
 	srand(time(NULL));
+	datasize = 2;
+
 	switch (t)
 	{
 	case LinearSimple:
 		sample_count = 3;
-		samples = new double[sample_count * 2]{ 1.0, 1.0, 2.0, 3.0, 3.0, 3.0 };
-		outputs = new double[sample_count] { 1, -1, -1 };
+		samples = new double[sample_count * datasize]{ 1.0, 1.0, 2.0, 3.0, 3.0, 3.0 };
+		outputs = new double[sample_count * datasize] { 1, -1, -1 };
+		break;
+
+	case LinearSimpleMulticlass:
+		sample_count = 3;
+		samples = new double[sample_count * datasize]{ 1.0, 1.0, 2.0, 3.0, 3.0, 3.0 };
+		outputs = new double[sample_count * datasize] { 1, 0, 0, 1, 0, 1 };
 		break;
 
 	case LinearMultiple:
@@ -38,6 +46,12 @@ CasTest::CasTest(TestType t)
 		sample_count = 4;
 		samples = new double[sample_count * 2]{ 1.0, 0.0, 0.0, 1.0, 0.0, 0.0, 1.0, 1.0 };
 		outputs = new double[sample_count] { 1, 1, -1, -1 };
+		break;
+
+	case XORMulticlass:
+		sample_count = 4;
+		samples = new double[sample_count * datasize]{ 1.0, 0.0, 0.0, 1.0, 0.0, 0.0, 1.0, 1.0 };
+		outputs = new double[sample_count * datasize] { 1, 0, 1, 0, 0, 1, 0, 1 };
 		break;
 
 	case Cross:
@@ -173,6 +187,6 @@ void CasTest::DisplayInfos()
 	std::cout << "   Samples     |      Output " << std::endl;
 	for (size_t i = 0; i < sample_count; i++)
 	{
-		std::cout << samples[i * 2] << ", " << samples[i * 2 + 1] << " | " << outputs[i] << std::endl;
+		std::cout << samples[i * 2] << ", " << samples[i * 2 + 1] << " | " << outputs[i * 2] << ", " << outputs[i * 2 + 1] << std::endl;
 	}
 }

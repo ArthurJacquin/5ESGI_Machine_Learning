@@ -8,7 +8,8 @@ public class ImageLoader : MonoBehaviour
 {
     public List<TestImportImage> visualizers;
     public bool visualize;
-    
+
+    public bool updateEditor;
     public string imagesFolderPath;
     public bool loadAllImages;
     public int nbImagesToLoad;
@@ -23,6 +24,8 @@ public class ImageLoader : MonoBehaviour
             _instance = this;
         if (_images == null)
             InitializeImages();
+
+        updateEditor = false;
     }
     
     public static ImageLoader GetInstance()
@@ -32,12 +35,15 @@ public class ImageLoader : MonoBehaviour
     
     private void Update()
     {
-        if (_instance == null)
+        if (_instance == null && updateEditor)
             _instance = this;
     }
 
     private void ImportImages()
     {
+        if (visualize)
+            visualizers = Visualizers.GetInstance().GetPoolList();
+        
         string pathReal = imagesFolderPath != "" ? imagesFolderPath + "/DataSet_real" : "D:/Projets5A/MachineLearning/5ESGI_Machine_Learning/DataSet_real";
         Debug.Log("Path for real images dataset : " + pathReal);
         string path3D = imagesFolderPath != "" ? imagesFolderPath + "/DataSet_3D" : "D:/Projets5A/MachineLearning/5ESGI_Machine_Learning/DataSet_3D";
@@ -86,7 +92,7 @@ public class ImageLoader : MonoBehaviour
                         visualizerIndex++;
                     }
                 
-                    images.Add(ConvertTexture2DIntoList(tmp));
+                    images.Add(ConvertTexture2DIntoFloatList(tmp));
                 }
             }
             else
@@ -100,12 +106,10 @@ public class ImageLoader : MonoBehaviour
 
                     if (visualize)
                     {
-                        visualizers[visualizerIndex % visualizers.Count].ApplyTexture(tmp);
-                    
-                        visualizerIndex++;
+                        visualizers[i % visualizers.Count].ApplyTexture(tmp);
                     }
                 
-                    images.Add(ConvertTexture2DIntoList(tmp));
+                    images.Add(ConvertTexture2DIntoFloatList(tmp));
                 }
             }
         }
@@ -113,7 +117,7 @@ public class ImageLoader : MonoBehaviour
         return images;
     }
 
-    private List<float> ConvertTexture2DIntoList(Texture2D tex)
+    private List<float> ConvertTexture2DIntoFloatList(Texture2D tex)
     { 
         List<float> pixels = new List<float>();
 

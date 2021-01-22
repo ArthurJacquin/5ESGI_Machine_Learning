@@ -9,10 +9,11 @@ public class MlDllRun : MonoBehaviour
     [SerializeField] private Material greenMat;
     [SerializeField] private Material redMat;
     [SerializeField] private Material blueMat;
+    //[SerializeField] private List<int> dimensions;
     
     public void RunMlDll(TypeTest type, bool isClassification, int epoch, double alpha)
     {
-        //Initialisation des infos du test en focntion de son type
+        //Initialisation des infos du test en fonction de son type
         var test = new TestClass(type);
         //test.DisplayInfos();
         

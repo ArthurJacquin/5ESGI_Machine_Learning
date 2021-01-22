@@ -6,6 +6,7 @@ public class TestImportImage : MonoBehaviour
 
     public void ApplyTexture(Texture2D tex)
     {
-        this.gameObject.GetComponent<Renderer>().sharedMaterial.SetTexture(MainTex, tex);
+        this.gameObject.GetComponent<Renderer>().material.SetTexture(MainTex, tex);
+        this.gameObject.SetActive(true);
     }
 }

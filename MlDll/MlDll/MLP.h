@@ -3,10 +3,10 @@
 
 struct MLP
 {
-	int* d;
-	int L;
-	double* w;
-	double* x;
+	int* d; //Dimensions
+	int L; //Nombre de couches
+	double* w; //Poids
+	double* x; //Valeurs des neuronnes
 	std::vector<std::vector<double>> deltas;
 
 	int node_count;

@@ -29,20 +29,20 @@ int main()
     std::cout.precision(5);
     getchar();
 
-    CasTest test(TestType::LinearMultipleMulticlass);
+    CasTest test(TestType::XORMulticlass);
     
     test.DisplayInfos();
 
     //Variables
-    int epoch = 100;
-    double alpha = 0.1;
+    double learningRate = 0.1;
     bool isClassification = true;
 
     //-------------------------------------Linear-----------------------------------------
-#if 1
+#if 0
     //Creation du model
+    int epoch = 1000;
     int input_count = 2;
-    int outputSize = 2;
+    int outputSize = 3;
     double* model = create_linear_model(input_count, outputSize);
 
     std::cout << "BEFORE !" << std::endl;
@@ -61,9 +61,10 @@ int main()
 #endif
 
     //-------------------------------------MLP-----------------------------------------
-#if 0
+#if 1
+    int epoch = 1000;
     int layer_count = 3;
-    int* dims = new int[layer_count] { 2, 3, 1 };
+    int* dims = new int[layer_count] { 2, 3, 2 };
     int node_count = 0;
     for (int i = 0; i < layer_count; ++i)
     {
@@ -74,26 +75,45 @@ int main()
     //Creation du model
     double* model = create_MLP_model(dims, layer_count);
 
-    std::cout << "BEFORE !" << std::endl;
+    std::cout << "BEFORE TRAINING !" << std::endl;
     for (size_t i = 0; i < test.sample_count; i++)
     {
         double* result = predict_MLP(model, new double[2]{ test.samples[i * 2], test.samples[i * 2 + 1] }, dims, layer_count, isClassification);
-        std::cout << " resultat : " << result[node_count - 1] << std::endl;
+        if (isClassification)
+            std::cout << " resultat : " << result[0] << std::endl;
+        else
+        {
+            std::cout << " resultat : " << std::endl;
+            for (size_t i = 0; i < dims[layer_count - 1]; i++)
+            {
+                std::cout << result[i] << std::endl;
+            }
+        }
     }
 
-    train_MLP(model, test.samples, test.sample_count, test.outputs, dims, layer_count, isClassification, epoch, alpha);
+    train_MLP(model, test.samples, test.sample_count, test.outputs, dims, layer_count, isClassification, epoch, learningRate);
 
-    std::cout << "AFTER !" << std::endl;
+    std::cout << "AFTER TRAINING !" << std::endl;
     for (size_t i = 0; i < test.sample_count; i++)
     {
         double* result = predict_MLP(model, new double[2]{ test.samples[i * 2], test.samples[i * 2 + 1] }, dims, layer_count, isClassification);
-        std::cout << " resultat : " << result[node_count - 1] << std::endl;
+        if (isClassification)
+            std::cout << " resultat : " << result[0] << std::endl;
+        else
+        {
+            std::cout << " resultat : " << std::endl;
+            for (size_t i = 0; i < dims[layer_count - 1]; i++)
+            {
+                std::cout << result[i] << std::endl;
+            }
+        }
     }
 
 #endif
 
     //-------------------------------------RBF-----------------------------------------
 #if 0
+    int epoch = 100;
     int* dims = new int[2] { 150, 2 };
     int inputSize = 1;
     float gamma = 0.1; //VALEUR MISE AU PIF

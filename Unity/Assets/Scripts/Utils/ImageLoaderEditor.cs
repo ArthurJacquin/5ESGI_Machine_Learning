@@ -1,17 +1,24 @@
 ﻿using UnityEditor;
 using UnityEngine;
 
-[CustomEditor(typeof(ImageLoader))]
-public class ImageLoaderEditor : Editor
+namespace Utils
 {
-    public override void OnInspectorGUI()
+    [CustomEditor(typeof(ImageLoader))]
+    public class ImageLoaderEditor : Editor
     {
-        DrawDefaultInspector();
-
-        ImageLoader loader = (ImageLoader) target;
-        if (GUILayout.Button("Import Images"))
+        public override void OnInspectorGUI()
         {
-            loader.InitializeImages();
+            DrawDefaultInspector();
+
+            EditorGUILayout.BeginHorizontal();
+            GUILayout.FlexibleSpace();
+            ImageLoader loader = (ImageLoader) target;
+            if (GUILayout.Button("Import Images",GUILayout.Width(135), GUILayout.Height(30)))
+            {
+                loader.InitializeImages();
+            }
+            GUILayout.FlexibleSpace();
+            EditorGUILayout.EndHorizontal();
         }
     }
 }

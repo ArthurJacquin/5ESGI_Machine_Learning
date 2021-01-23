@@ -42,6 +42,33 @@ CasTest::CasTest(TestType t)
 		}
 		break;
 
+	case LinearMultipleMulticlass:
+		sample_count = 200;
+		samples = new double[sample_count];
+		for (size_t i = 0; i < sample_count; i++)
+		{
+			if (i < 100)
+				samples[i] = rand() / (double)RAND_MAX + 1.0;
+			else
+				samples[i] = rand() / (double)RAND_MAX + 2.0;
+		}
+
+		outputs = new double[sample_count * 2];
+		for (size_t i = 0; i < sample_count; i++)
+		{
+			if (i < 100)
+			{
+				outputs[i * 2] = 1.0;
+				outputs[i * 2 + 1] = 0.0;
+			}
+			else
+			{
+				outputs[i * 2] = 0.0;
+				outputs[i * 2 + 1] = 1.0;
+			}
+		}
+		break;
+
 	case XOR:
 		sample_count = 4;
 		samples = new double[sample_count * 2]{ 1.0, 0.0, 0.0, 1.0, 0.0, 0.0, 1.0, 1.0 };
@@ -55,7 +82,7 @@ CasTest::CasTest(TestType t)
 		break;
 
 	case Cross:
-		sample_count = 500;
+		sample_count = 200;
 		samples = new double[sample_count * 2];
 		for (size_t i = 0; i < (sample_count * 2); i++)
 		{
@@ -72,40 +99,64 @@ CasTest::CasTest(TestType t)
 		}
 		break;
 
-	case MultiLinear:
-		sample_count = 500;
+	case CrossMulticlass:
+		sample_count = 200;
 		samples = new double[sample_count * 2];
 		for (size_t i = 0; i < (sample_count * 2); i++)
 		{
 			samples[i] = rand() / (double)RAND_MAX * 2.0 - 1.0;
 		}
 
-		outputs = new double[sample_count];
+		outputs = new double[sample_count * 2];
+		for (size_t i = 0; i < sample_count; i++)
+		{
+			if (abs(samples[i * 2]) <= 0.3 || abs(samples[i * 2 + 1]) <= 0.3)
+			{
+				outputs[i * 2] = 1.0;
+				outputs[i * 2 + 1] = 0.0;
+			}
+			else
+			{
+				outputs[i * 2] = 0.0;
+				outputs[i * 2 + 1] = 1.0;
+			}
+		}
+		break;
+
+	case MultiLinear:
+		sample_count = 10;
+		samples = new double[sample_count * 2];
+		for (size_t i = 0; i < (sample_count * 2); i++)
+		{
+			samples[i] = rand() / (double)RAND_MAX * 2.0 - 1.0;
+		}
+
+		outputs = new double[sample_count * 3];
 		for (size_t i = 0; i < sample_count; i++)
 		{
 			if (-(samples[i * 2]) - samples[i * 2 + 1] - 0.5 > 0 && samples[i * 2 + 1] < 0 && samples[i * 2] - samples[i * 2 + 1] - 0.5 < 0)
 			{
-				outputs[i] = 1.0;
-				outputs[i + 1] = 0.0;
-				outputs[i + 2] = 0.0;
+				outputs[i * 3] = 1.0;
+				outputs[i * 3 + 1] = 0.0;
+				outputs[i * 3 + 2] = 0.0;
 			}
 			else if (-(samples[i * 2]) - samples[i * 2 + 1] - 0.5 < 0 && samples[i * 2 + 1] > 0 && samples[i * 2] - samples[i * 2 + 1] - 0.5 < 0)
 			{
-				outputs[i] = 0.0;
-				outputs[i + 1] = 1.0;
-				outputs[i + 2] = 0.0;
+				outputs[i * 3] = 0.0;
+				outputs[i * 3 + 1] = 1.0;
+				outputs[i * 3 + 2] = 0.0;
 			}
 			else if (-(samples[i * 2]) - samples[i * 2 + 1] - 0.5 < 0 && samples[i * 2 + 1] < 0 && samples[i * 2] - samples[i * 2 + 1] - 0.5 > 0)
 			{
-				outputs[i] = 0.0;
-				outputs[i + 1] = 0.0;
-				outputs[i + 2] = 1.0;
+				outputs[i * 3] = 0.0;
+				outputs[i * 3 + 1] = 0.0;
+				outputs[i * 3 + 2] = 1.0;
 			}
 			else
 			{
-				outputs[i] = 0.0;
-				outputs[i + 1] = 0.0;
-				outputs[i + 2] = 0.0;
+				outputs[i * 3] = 0.0;
+				outputs[i * 3 + 1] = 0.0;
+				outputs[i * 3 + 2] = 0.0;
 			}
 		}
 		break;
@@ -143,15 +194,16 @@ CasTest::CasTest(TestType t)
 		break;
 
 	case LinearSimple2D:
-		sample_count = 2;
-		samples = new double[sample_count * 2]{ 1.0, 2.0 };
-		outputs = new double[sample_count] { 2, 3 };
+		sample_count = 1;
+		samples = new double[sample_count * datasize]{ 1.0, 2.0 };
+		outputs = new double[sample_count * datasize] { 2, 3 };
 		break;
 
 	case NonLinearSimple2D:
-		sample_count = 3;
-		samples = new double[sample_count * 2]{ 1.0, 2.0, 3.0 };
-		outputs = new double[sample_count] { 2, 3, 2.5 };
+		sample_count = 1;
+		datasize = 3;
+		samples = new double[sample_count * datasize]{ 1.0, 2.0, 3.0 };
+		outputs = new double[sample_count * datasize] { 2, 3, 2.5 };
 		break;
 
 	case LinearSimple3D:
@@ -187,6 +239,6 @@ void CasTest::DisplayInfos()
 	std::cout << "   Samples     |      Output " << std::endl;
 	for (size_t i = 0; i < sample_count; i++)
 	{
-		std::cout << samples[i * 2] << ", " << samples[i * 2 + 1] << " | " << outputs[i * 2] << ", " << outputs[i * 2 + 1] << std::endl;
+		std::cout << samples[i * 2] << ", " << samples[i * 2 + 1] << " | " << outputs[i * 2] << ", " << outputs[i * 2 + 1]  << std::endl;
 	}
 }

@@ -21,9 +21,77 @@ using namespace Eigen;
 /// <summary>
 /// sigmoid
 /// </summary>
+
+#pragma region DEBUG
+	template<typename T>
+	void print(T var, std::string name)
+	{
+		std::cout << name << " :\n" << var << std::endl;
+	}
+
+	void printVectorDouble(std::vector<double*> a, int datasize, std::string name)
+	{
+		std::cout << "-->" << name << std::endl;
+		for (size_t i = 0; i < a.size(); i++)
+		{
+			std::cout << "(";
+			for (size_t j = 0; j < datasize - 1; j++)
+			{
+				std::cout << a[i][j] << ", ";
+			}
+
+			std::cout << a[i][datasize - 1] << ")" << std::endl;
+		}
+	}
+
+	void printArray(double* a, int size, int datasize, std::string name)
+	{
+		std::cout << "-->" << name << std::endl;
+		for (size_t i = 0; i < size; i++)
+		{
+			std::cout << "(";
+			for (size_t j = 0; j < datasize - 1; j++)
+			{
+				std::cout << a[i * datasize + j] << ", ";
+			}
+
+			std::cout << a[i * datasize + datasize - 1] << ")" << std::endl;
+		}
+	}
+#pragma endregion
+
 double Sign(double x)
 {
 	return 1 / (1 + exp(-x));
+}
+
+double* getOutput(double* outputTest, int outputSize, bool isClassification)
+{
+	if (isClassification)
+	{
+		//Recherche du max pour déterminer la classe
+		double max = 0.;
+		int id = 0;
+		for (size_t i = 0; i < outputSize; i++)
+		{
+			if (outputTest[i] > max)
+			{
+				max = outputTest[i];
+				id = i;
+			}
+		}
+
+		printArray(outputTest, outputSize, 1, "outputs");
+		//Si le maximum est trop petit -> appartient a aucune classe
+		if (max < 0.6)
+			return new double[1]{ -1.0 };
+
+		return new double[1]{ double(id) };
+	}
+	else
+	{
+		return outputTest;
+	}
 }
 
 extern "C" {
@@ -33,11 +101,11 @@ extern "C" {
 	/// <summary>
 	/// init des poids random
 	/// </summary>
-	__declspec(dllexport) double* create_linear_model(int inputs_count) {
-		auto weights = new double[inputs_count + 1];
+	__declspec(dllexport) double* create_linear_model(int inputs_count, int outputCount) {
+		double* weights = new double[inputs_count * outputCount + outputCount];
 		srand(time(NULL));
 
-		for (auto i = 0; i < inputs_count + 1; i++) {
+		for (auto i = 0; i < inputs_count * outputCount + 1; i++) {
 			weights[i] = rand() / (double)RAND_MAX * 2.0 - 1.0;
 		}
 
@@ -48,32 +116,63 @@ extern "C" {
 	/// <summary>
 	/// prédit un output 
 	/// </summary>
-	__declspec(dllexport) double predict_linear_model(double* model, double samples[], int input_count, bool isClassification) {
-
-		double sum = model[0]; //poids du biais
+	__declspec(dllexport) double* predict_linear_model(double* model, double samples[], int input_count, int outputSize, bool isClassification) 
+	{
+		double* outputTest = new double[outputSize];
 
 		//somme de tout les samples * poids
-		for (size_t i = 0; i < input_count; i++)
+		for (size_t i = 0; i < outputSize; i++)
 		{
-			sum += samples[i] * model[i + 1];
+			double sum = model[i]; //poids du biais
+
+			//somme de tout les samples * poids
+			for (size_t j = 0; j < input_count; j++)
+			{
+				sum += samples[j] * model[j * outputSize + i + outputSize];
+			}
+
+			if (isClassification)
+			{
+				if(Sign(sum) < 0.5)
+					outputTest[i] = 0.0;
+				else
+					outputTest[i] = 1.0;
+			}
+			else
+			{
+				outputTest[i] = sum;
+			}
 		}
 
-		if (isClassification)
+		return getOutput(outputTest, outputSize, isClassification);
+	}
+	
+	double* predictForTraining(double* model, double* samples, int input_count, int outputSize)
+	{
+		double* outputTest = new double[outputSize];
+
+		for (size_t i = 0; i < outputSize; i++)
 		{
+			double sum = model[i]; //poids du biais
+
+			//somme de tout les samples * poids
+			for (size_t j = 0; j < input_count; j++)
+			{
+				sum += samples[j] * model[j * outputSize + i + outputSize];
+			}
+
 			if (Sign(sum) < 0.5)
-				return -1.0;
+				outputTest[i] = 0.0;
 			else
-				return 1.0;
+				outputTest[i] = 1.0;
 		}
-		else
-		{
-			return sum;
-		}
+
+		return outputTest;
 	}
 
 	//---------------------------------------Train----------------------------------------------
 	void train_linear_model_classification(double* model, double all_samples[], int sample_count, int input_count,
-		double all_expected_outputs[], int epochs, double learning_rate)
+		double all_expected_outputs[], int outputSize, int epochs, double learning_rate)
 	{
 		srand(time(NULL));
 
@@ -87,19 +186,28 @@ extern "C" {
 			for (size_t i = 0; i < input_count; i++)
 				X[i] = all_samples[k * input_count + i];
 
-			double Y = all_expected_outputs[k]; //Recup du resultat souhaité
-
-			double p = predict_linear_model(model, X, input_count, true); //Prediction du résultat
-
-			//Mise à jour des poids
-			model[0] = model[0] + learning_rate * (Y - p);
-			for (size_t i = 0; i < input_count; i++)
+			double* Y = new double[outputSize];
+			for (size_t i = 0; i < outputSize; i++)
 			{
-				model[i + 1] = model[i + 1] + learning_rate * (Y - p) * X[i];
+				Y[i] = all_expected_outputs[k * outputSize + i]; //Recup du resultat souhaité
+			} 
+
+			double* p = predictForTraining(model, X, input_count, outputSize); //Prediction du résultat
+
+			for (size_t o = 0; o < outputSize; o++)
+			{
+				//Mise à jour des poids
+				double error = Y[o] - p[o];
+				model[o] += learning_rate * error;
+				for (size_t i = 0; i < input_count; i++)
+				{
+					model[i * outputSize + o + outputSize] += learning_rate * error * X[i];
+				}
 			}
 		}
 	}
 
+	//TODO : A debug
 	void train_linear_model_regression(double* model, double all_samples[], int sample_count, int input_count,
 		double all_expected_outputs[], int epochs, double learning_rate)
 	{
@@ -114,7 +222,6 @@ extern "C" {
 				X(i, j + 1) = all_samples[i * input_count + j];
 			}
 		}
-		std::cout << "X : " << std::endl << X << std::endl;
 
 		//Matrices avec les outputs attendus
 		MatrixXd Y(sample_count, 1);
@@ -122,14 +229,9 @@ extern "C" {
 		{
 			Y(i, 0) = all_expected_outputs[i];
 		}
-		std::cout << "Y : " << std::endl << Y << std::endl;
 
 		//Matrices pour la mise a jour des poids
 		MatrixXd m = ((X.transpose() * X).inverse() * X.transpose()) * Y;
-		std::cout << "trans : " << std::endl << X.transpose() << std::endl;
-		std::cout << "mul : " << std::endl << X.transpose() * X << std::endl;
-		std::cout << "inverse : " << std::endl << (X.transpose() * X).inverse() << std::endl;
-		std::cout << "M : " << std::endl << m << std::endl;
 
 		//Mise a jour des poids
 		//std::cout << "model : " << std::endl;
@@ -141,24 +243,26 @@ extern "C" {
 	}
 
 	__declspec(dllexport) void train_linear_model(double* model, double all_samples[], int sample_count, int input_count,
-		double all_expected_outputs[], int epochs, double learning_rate, bool isClassification) {
+		double all_expected_outputs[], int outputSize, int epochs, double learning_rate, bool isClassification) 
+	{
 
 		if (isClassification)
-			train_linear_model_classification(model, all_samples, sample_count, input_count, all_expected_outputs, epochs, learning_rate);
+			train_linear_model_classification(model, all_samples, sample_count, input_count, all_expected_outputs, outputSize, epochs, learning_rate);
 		else
 			train_linear_model_regression(model, all_samples, sample_count, input_count, all_expected_outputs, epochs, learning_rate);
 	}
 
 	//-------------------------------------Delete---------------------------------------------
-	__declspec(dllexport) void delete_model(double* model) {
+	__declspec(dllexport) void delete_model(double* model) 
+	{
 		delete[] model;
 	}
 #pragma endregion
 
 #pragma region MLP
 	//--------------------------------------MLP-------------------------------------------------
-	__declspec(dllexport) double* create_MLP_model(int dims[], int layer_count) {
-
+	__declspec(dllexport) double* create_MLP_model(int dims[], int layer_count) 
+	{
 		//Nombre total de poids
 		int nbWeight = 0;
 		for (size_t l = 1; l < layer_count; l++)
@@ -179,8 +283,6 @@ extern "C" {
 	/// <summary>
 	/// 
 	/// </summary>
-	/// <param name="model"></param>
-	/// <param name="inputs"></param>
 	/// <param name="dimensions"> dimensions du réseau
 	/// [0] -> inputs_count
 	/// [1 .... N - 2] -> nb de neurones dans la couche
@@ -188,6 +290,62 @@ extern "C" {
 	///  </param>
 	/// <param name="isClassification">classification ou regression</param>
 	__declspec(dllexport) double* predict_MLP(double* model, double samples[], int* dims, int layer_count, bool isClassification)
+	{
+		std::cout << "---------------PREDICT--------------------" << std::endl;
+		MLP* mlp = new MLP(model, dims, layer_count);
+		mlp->d = dims;
+		mlp->w = model;
+		mlp->L = layer_count - 1;
+
+		for (int j = 0; j < mlp->d[0]; ++j)
+		{
+			mlp->x[j + 1] = samples[j];
+		}
+
+		int offsetW = 0;
+		int offsetX = 0;
+		for (int l = 1; l < mlp->L + 1; ++l) // Parcours des couches
+		{
+			if (l != 1)
+			{
+				offsetW += (mlp->d[l - 1]) * (mlp->d[l - 2] + 1);
+			}
+			offsetX += mlp->d[l - 1] + 1;
+
+			for (int j = 1; j < mlp->d[l] + 1; ++j) // Parcours des neuronnes
+			{
+				double sum = 0.0;
+
+				for (int i = 0; i < mlp->d[l - 1] + 1; ++i) // Parcours des poids
+				{
+					int idW = offsetW + (j - 1) + i * (mlp->d[l]);
+					//std::cerr <<"offset =" << offsetX << " | j = " << j << " | i = " << i << "| idx =" << offsetX + j << std::endl;
+					sum += mlp->x[offsetX - (mlp->d[l - 1] + 1) + i] * mlp->w[idW];
+					//std::cerr << "idx =" << offsetX - (mlp->d[l - 1] + 1) + i << "X =" << mlp->x[offsetX + j] << " | W = " << mlp->w[idW] << std::endl;
+				}
+				if (l == mlp->L && !isClassification)
+				{
+					mlp->x[offsetX + j] = sum;
+				}
+				else
+				{
+					mlp->x[offsetX + j] = tanh(sum);
+				}
+			}
+		}
+
+		//Recupération des outputs
+		double* outputs = new double[dims[layer_count - 1]];
+		int idLastLayer = mlp->node_count - mlp->d[mlp->L];
+		for (size_t i = idLastLayer; i < mlp->node_count; i++)
+		{
+			outputs[i - idLastLayer] = mlp->x[i];
+		}
+
+		return getOutput(outputs, mlp->d[mlp->L], isClassification);
+	}
+
+	double* predictMLPForTraining(double* model, double samples[], int* dims, int layer_count, bool isClassification)
 	{
 		MLP* mlp = new MLP(model, dims, layer_count);
 		mlp->d = dims;
@@ -236,12 +394,11 @@ extern "C" {
 
 	__declspec(dllexport) double* train_MLP(double* model, double allSamples[], int sampleCount, double allExpectedOutputs[], int* dims, int layer_count, bool isClassification, int epochs, double alpha)
 	{
+		std::cout << "---------------TRAINING--------------------" << std::endl;
 		MLP* mlp = new MLP(model, dims, layer_count);
 		mlp->d = dims;
 		mlp->w = model;
 		mlp->L = layer_count - 1;
-
-		//printArray(mlp->deltas, );
 
 		int inputsSize = mlp->d[0];
 		int outputsSize = mlp->d[mlp->L];
@@ -267,7 +424,7 @@ extern "C" {
 				y_k[i] = allExpectedOutputs[outputsSize * k + i];
 			}
 
-			mlp->x = predict_MLP(mlp->w, x_k, mlp->d, layer_count, isClassification);
+			mlp->x = predictMLPForTraining(mlp->w, x_k, mlp->d, layer_count, isClassification);
 
 			//Offset
 			int offset = 0;
@@ -400,7 +557,6 @@ extern "C" {
 	double* calculateCenter(double* X, int inputSize, int dataSize)
 	{
 		double* center = new double[dataSize];
-		//std::cout << "DataSize : " << dataSize << " | InputSize : " << inputSize << std::endl;
 
 		//Init center
 		for (size_t j = 0; j < dataSize; j++)
@@ -412,8 +568,6 @@ extern "C" {
 		{
 			for (size_t j = 0; j < dataSize; j++)
 			{
-
-				//std::cout << "I : " << i << " | J : " << j << " | X[j + i] : " << X[i * dataSize + j] << std::endl;
 				center[j] += X[i * dataSize + j];
 			}
 		}
@@ -465,18 +619,31 @@ extern "C" {
 	/// </summary>
 	std::vector<double*> lloydAlgorithm(std::vector<double*>& samples, int K, int sampleSize, int inputSize, int dataSize)
 	{
-		std::cout << "---------------Lloyd algo--------------------" << std::endl;
 		std::vector<double*> centers;
-		centers.resize(K);
 
 		//initialisation random des centers
 		for (size_t i = 0; i < K; i++)
 		{
-			centers.push_back(calculateCenter(samples[rand() % (sampleSize)], inputSize, dataSize));
+			centers.push_back(calculateCenter(samples[i], inputSize, dataSize));
+			//centers.push_back(calculateCenter(samples[rand() % (sampleSize)], inputSize, dataSize));
 		}
 
-		std::vector<double*> dataSumPerCenter;
-		std::vector<int> datasPerCenter;
+		std::vector<double*> dataSumPerCenter; //Somme de tout les samples dans chaque cluster
+		std::vector<int> datasPerCenter; //Nombre de samples dans chaque cluster
+
+		//Initialisation des tableaux
+		dataSumPerCenter.resize(K);
+		datasPerCenter.resize(K);
+		for (size_t i = 0; i < K; ++i)
+		{
+			dataSumPerCenter[i] = new double[dataSize];
+			for (size_t j = 0; j < dataSize; ++j)
+			{
+				dataSumPerCenter[i][j] = 0.0;
+			}
+
+			datasPerCenter[i] = 0;
+		}
 
 		//assignation des data aux clusters les plus proches
 		//boucle sur les datas
@@ -500,6 +667,7 @@ extern "C" {
 			//ajout data dans le cluster le plus proche 
 			for (size_t i = 0; i < dataSize; i++)
 			{
+				//std::cout << "minIndex : " << minIndex << " | dataSumPerCenter : " << dataSumPerCenter.size()  << " | i : " << i << std::endl;
 				dataSumPerCenter[minIndex][i] += currentCenter[i];
 			}
 
@@ -516,7 +684,7 @@ extern "C" {
 			}
 		}
 
-		return centers;
+ 		return centers;
 	}
 
 	/// <summary>
@@ -524,7 +692,6 @@ extern "C" {
 	/// </summary>
 	void calculateWeight(double*& model, int K, int sampleSize, std::vector<double*> lloydCenters, std::vector<double*>& samples, int inputSize, int dataSize, double gamma, double* output, int outputCount)
 	{
-		std::cout << "---------------Weights Update--------------------" << std::endl;
 		MatrixXd X(sampleSize, K);
 
 		for (size_t i = 0; i < X.rows(); i++)
@@ -542,18 +709,18 @@ extern "C" {
 		{
 			for (size_t j = 0; j < outputMat.cols(); j++)
 			{
-				outputMat(i, j) = output[i * outputCount * j];
+				outputMat(i, j) = output[i * outputCount + j];
 			}
 		}
 
-		VectorXd result = (X.transpose() * X).inverse() * X.transpose() * outputMat;
+		MatrixXd result = (X.transpose() * X).inverse() * X.transpose() * outputMat;
 
-		double* w = new double[K * outputCount];
-		Map< VectorXd>(w, result.size()) = result;
-
-		for (size_t i = 0; i < K * outputCount; i++)
+		for (size_t i = 0; i < result.rows(); i++)
 		{
-			model[i] = w[i];
+			for (size_t j = 0; j < result.cols(); j++)
+			{
+				model[i * result.cols() + j] = result(i, j);
+			}
 		}
 	}
 
@@ -588,6 +755,8 @@ extern "C" {
 	__declspec(dllexport) double* training_RBF_model(double* model, int dims[], double* samples, int sampleSize, int inputSize, int dataSize, double* output, int epoch, double gamma)
 	{
 		std::cout << "---------------TRAINING--------------------" << std::endl;
+		
+		std::cout << "---------------Parsing--------------------" << std::endl;
 		//Parse samples
 		std::vector<double*> data;
 		parseSample(data, samples, sampleSize, inputSize, dataSize);
@@ -595,21 +764,25 @@ extern "C" {
 		int K = dims[0];
 		int outputCount = dims[1];
 
+		std::cout << "---------------Lloyd algo--------------------" << std::endl;
 		//initialize center
 		std::vector<double*> lloydCenters = lloydAlgorithm(data, K, sampleSize, inputSize, dataSize);
+		//printVectorDouble(lloydCenters, dataSize, "centers");
 
+		std::cout << "---------------Weights Update--------------------" << std::endl;
 		//calcule les poids 
 		for (size_t i = 0; i < epoch; i++)
 		{
 			calculateWeight(model, K, sampleSize, lloydCenters, data, inputSize, dataSize, gamma, output, outputCount);
 		}
+		//printArray(model, K, outputCount, "Weights");
 
 		//concatene les centres dans model
-		for (size_t i = K * outputCount; i < K * outputCount + K; i++)
+		for (size_t i = 0; i < K; i++)
 		{
 			for (size_t j = 0; j < dataSize; j++)
 			{
-				model[i * dataSize + j] = lloydCenters[i - (K * outputCount)][j];
+				model[K * outputCount + i * dataSize + j] = lloydCenters[i][j];
 			}
 		}
 
@@ -619,17 +792,17 @@ extern "C" {
 	/// <summary>
 	/// predict 
 	/// </summary>
-	__declspec(dllexport) double predict_RBF_model(double* model, int dims[], double* samples, int inputSize, int dataSize, bool isClassification, float gamma)
+	__declspec(dllexport) double* predict_RBF_model(double* model, int dims[], double* samples, int inputSize, int dataSize, bool isClassification, float gamma)
 	{
 		std::cout << "---------------PREDICT--------------------" << std::endl;
 		int outputSize = dims[1];
 		RBF* rbf = new RBF(dims, dataSize);
-
 		//init w
 		for (size_t i = 0; i < rbf->wSize; i++)
 		{
 			rbf->w[i] = model[i];
 		}
+		//printArray(rbf->w, rbf->wSize, 1, "result");
 
 		//init c
 		for (size_t i = 0; i < rbf->cSize; i++)
@@ -669,18 +842,7 @@ extern "C" {
 			}
 		}
 
-		double max = 0.;
-		int id = 0;
-		for (size_t i = 0; i < outputSize; i++)
-		{
-			if (outputTest[i] > max)
-			{
-				max = outputTest[i];
-				id = i;
-			}
-		}
-
-		return id;
+		return getOutput(outputTest, outputSize, isClassification);
 	}
 
 #pragma endregion

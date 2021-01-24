@@ -25,6 +25,7 @@ namespace Utils
         public TypeImage type;
         public bool loadAllImages;
         public int nbImagesToLoad;
+        public bool loadRandomImages;
 
         private static ImageLoader _instance;
         private List<List<float>> _images;
@@ -60,7 +61,7 @@ namespace Utils
 
             string path = projectFolderPath;
             
-            /*switch (type)
+            switch (type)
             {
                 case TypeImage.Color4X4:
                     path += "/DataSet_Color/DataSet_4x4";
@@ -86,22 +87,22 @@ namespace Utils
             Debug.Log("Path for real images dataset : " + pathReal);
             string path3D = projectFolderPath != "" ? path + "/DataSet_3D" : "C:/ESGI/5A_Projets/5ESGI_Machine_Learning/DataSet_Color/DataSet_4x4/DataSet_3D";
             Debug.Log("Path for 3D images dataset : " + path3D);
-            */
-            string[] files = System.IO.Directory.GetFiles(path, "*.jpg");
-            //string[] files3D = System.IO.Directory.GetFiles(path3D, "*.jpg");
+            
+            string[] files = System.IO.Directory.GetFiles(pathReal, "*.jpg");
+            string[] files3D = System.IO.Directory.GetFiles(path3D, "*.jpg");
 
             List<List<float>> imagesReal = LoadImagesFromPath(files);
-            //List<List<float>> images3D = LoadImagesFromPath(files3D);
+            List<List<float>> images3D = LoadImagesFromPath(files3D);
 
             foreach (var image in imagesReal)
             {
                 _images.Add(image);
             }
 
-            //foreach (var image in images3D)
-            //{
-            //    _images.Add(image);
-            //}
+            foreach (var image in images3D)
+            {
+                _images.Add(image);
+            }
         
             Debug.Log("Found images : " + _images.Count);
         }
@@ -135,9 +136,26 @@ namespace Utils
                 }
                 else
                 {
+                    List<int> usedIndexes = new List<int>();
                     for(int i = 0; i < nbImagesToLoad; ++i)
                     {
-                        string path = filepath[i];
+                        string path;
+                        if(loadRandomImages)
+                        {
+                            int id = 0;
+                            do
+                            {
+                                id = UnityEngine.Random.Range(0, filepath.Length);
+                                path = filepath[id];
+                            } 
+                            while (usedIndexes.Contains(id));
+
+                            usedIndexes.Add(id);
+                        }
+                        else
+                        {
+                            path = filepath[i];
+                        }
                         fileData = File.ReadAllBytes(path);
                         Texture2D tmp = new Texture2D(500, 500, TextureFormat.DXT1, false);
                         tmp.LoadImage(fileData);

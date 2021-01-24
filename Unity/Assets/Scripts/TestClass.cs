@@ -25,8 +25,11 @@ public struct TestInfos
 
 public class TestClass
 {
-    public int SampleCount;
-    public int NodeCount;
+    public int SampleCount; //Nombre de sample
+    public int InputCount; //Nombre de data dans 1 samples (nb de pixels)
+    public int Datasize; //Nombre de composantes brutes (r, g, b pour un pixel)
+    public int NbClass; //Nombre de classes
+    public int NodeCount; //Nombre de neuronnes dans le réseau
 
     public double[] Samples;
     public double[] Outputs;
@@ -52,7 +55,7 @@ public class TestClass
         {
             case TypeTest.LinearSimple:
                 Outputs = new double[] {1, -1, -1};
-                
+
                 Infos = new TestInfos()
                 {
                     LayerCount = 2,
@@ -212,14 +215,18 @@ public class TestClass
     {
         Type = type;
         Infos = new TestInfos();
-        
+        NbClass = 2;
+
         switch (type)
         {
             case TypeTest.LinearSimple:
                 SampleCount = 3;
-                Samples = new double[] {1.0f, 1.0f, 2.0f, 3.0f, 3.0f, 3.0f};
-                Outputs = new double[] {1, -1, -1};
-                
+                InputCount = 2;
+                Datasize = 1;
+
+                Samples = new double[] {1.0, 1.0, 2.0, 3.0, 3.0, 3.0};
+                Outputs = new double[] {1, 0, 0, 1, 0, 1};
+
                 Infos = new TestInfos()
                 {
                     LayerCount = 2,
@@ -229,30 +236,38 @@ public class TestClass
                 break;
             
             case TypeTest.LinearMultiple:
+                InputCount = 2;
+                Datasize = 1;
                 SampleCount = 100;
                 Samples = new double[SampleCount * 2];
                 for (int i = 0; i < SampleCount * 2; ++i)
                 {
                     if (i < 100)
-                        Samples[i] = Random.Range(0.0f, 1.0f) * 0.9f + 1.0f;
+                        Samples[i] = (double)(Random.Range(0.0f, 1.0f) * 0.9f + 1.0f);
                     else 
-                        Samples[i] = Random.Range(0.0f, 1.0f) * 0.9f + 2.0f;
+                        Samples[i] = (double)(Random.Range(0.0f, 1.0f) * 0.9f + 2.0f);
                 }
 
-                Outputs = new double[SampleCount];
+                Outputs = new double[SampleCount * NbClass];
                 for (int i = 0; i < SampleCount; ++i)
                 {
                     if (i < 50)
-                        Outputs[i] = 1.0f;
+                    {
+                        Outputs[i * NbClass] = 1.0;
+                        Outputs[i * NbClass + 1] = 0.0;
+                    }
                     else
-                        Outputs[i] = -1.0f;
+                    {
+                        Outputs[i * NbClass] = 0.0;
+                        Outputs[i * NbClass + 1] = 1.0;
+                    }
                 }
 
                 Infos = new TestInfos() 
                 {
                     LayerCount = 2,
                     OutputSize = 100,
-                    Dimensions = new int[] {2, 1}
+                    Dimensions = new int[] {2, 2}
                 };
                 break;
             
@@ -296,6 +311,7 @@ public class TestClass
             
             case TypeTest.MultiLinear:
                 //TODO : update needed
+                NbClass = 3;
                 SampleCount = 3;
                 Samples = new double[] {1.0f, 1.0f, 2.0f, 3.0f, 3.0f, 3.0f};
                 Outputs = new double[] {1, -1, -1};
@@ -305,12 +321,13 @@ public class TestClass
                     //TODO : update needed
                     LayerCount = 2,
                     OutputSize = 3,
-                    Dimensions = new int[] {2, 1}
+                    Dimensions = new int[] {2, 2}
                 };
                 break;
             
             case TypeTest.MultiCross:
                 //TODO : update needed
+                NbClass = 3;
                 SampleCount = 3;
                 Samples = new double[] {1.0f, 1.0f, 2.0f, 3.0f, 3.0f, 3.0f};
                 Outputs = new double[] {1, -1, -1};

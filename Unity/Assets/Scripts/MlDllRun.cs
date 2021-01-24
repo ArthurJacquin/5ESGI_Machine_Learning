@@ -38,34 +38,45 @@ public class MlDllRun : MonoBehaviour
         }
 
         IntPtr model;
-        IntPtr results;
-        double resultat;
-        double[] managedResults;
+        IntPtr res;
+        double[] results = new double[test.SampleCount];
+        double[] managedResults = new double[test.NbClass];
         
         switch (modelType)
         {
             case TypeModel.Linear:
                 //Création du modèle
-                model = MlDllWrapper.CreateModelLinear(test.SampleCount, test.Infos.OutputSize);
+                model = MlDllWrapper.CreateModelLinear(test.InputCount, test.NbClass);
 
                 if (needTrain)
                 {
                     //TODO : c'est censé me retourner un double* ça
-                    MlDllWrapper.TrainModelLinear(model, test.Samples, test.SampleCount, test.SampleCount,
-                        test.Outputs, test.Infos.OutputSize, epoch, alpha, isClassification);
+                    MlDllWrapper.TrainModelLinear(model, test.Samples, test.SampleCount, test.InputCount,
+                        test.Outputs, test.NbClass, epoch, alpha, isClassification);
                 }
-                
-                //TODO : A suppr
-                results = MlDllWrapper.PredictModelMLP(model, test.Samples, test.Infos.Dimensions,
-                    test.Infos.LayerCount, isClassification);
-                
+
+                var w = new double[test.NbClass * test.NbClass + test.NbClass];
+                Marshal.Copy(model, w, 0, test.NbClass * test.NbClass + test.NbClass);
+
                 //TODO : pourquoi je récupère qu'un double et pas un double* ??
                 //Récupération des résultats
-                resultat = MlDllWrapper.PredictModelLinear(model, test.Samples, test.SampleCount, 
-                    test.Infos.OutputSize, isClassification);
-                
-                managedResults = new double[test.Infos.OutputSize];
-                Marshal.Copy(results, managedResults, 0, test.Infos.OutputSize);
+                for (int i = 0; i < test.SampleCount; i++)
+                {
+                    double[] sample = new double[test.InputCount * test.Datasize];
+                    for (int j = 0; j < test.InputCount * test.Datasize; j++)
+                    {
+                        int id = i * test.InputCount * test.Datasize + j;
+                        sample[j] = test.Samples[id];
+                    }
+
+                    res = MlDllWrapper.PredictModelLinear(model, sample, test.InputCount, 
+                        test.NbClass, isClassification);
+
+                    Marshal.Copy(res, managedResults, 0, test.NbClass);
+
+                    results[i] = managedResults[0];
+                }
+
                 break;
             
             case TypeModel.MLP:
@@ -79,11 +90,10 @@ public class MlDllRun : MonoBehaviour
                 }
 
                 //Obligée de faire ça sinon je peux pas changer les valeurs de results dans la boucle for
-                results = MlDllWrapper.PredictModelMLP(model, test.Samples, test.Infos.Dimensions,
+                res = MlDllWrapper.PredictModelMLP(model, test.Samples, test.Infos.Dimensions,
                     test.Infos.LayerCount, isClassification);
                 
                 var managedTmp = new double[test.SampleCount]; 
-                managedResults = new double[test.SampleCount];
                 //Récupération des résultats
                 for (int i = 0; i < test.SampleCount; ++i)
                 {
@@ -92,7 +102,7 @@ public class MlDllRun : MonoBehaviour
                         test.Infos.LayerCount, isClassification);
                     
                     Marshal.Copy(tmp, managedTmp, 0, test.SampleCount);
-                    Marshal.Copy(results, managedResults, 0, test.SampleCount);
+                    Marshal.Copy(res, managedResults, 0, test.SampleCount);
                     
                     if (test.Infos.Dimensions[test.Infos.LayerCount - 1] == 1)
                     {
@@ -116,11 +126,11 @@ public class MlDllRun : MonoBehaviour
                 }
                 
                 //Récupération des résultats
-                results = MlDllWrapper.PredictModelRBF(model, test.Infos.Dimensions, test.Samples, test.SampleCount,
+                res = MlDllWrapper.PredictModelRBF(model, test.Infos.Dimensions, test.Samples, test.SampleCount,
                     test.SampleCount, isClassification, gamma);
                 
                 managedResults = new double[test.Infos.OutputSize];
-                Marshal.Copy(results, managedResults, 0, test.Infos.OutputSize);
+                Marshal.Copy(res, managedResults, 0, test.Infos.OutputSize);
                 break;
             
             default:
@@ -133,21 +143,20 @@ public class MlDllRun : MonoBehaviour
                 }
                 
                 //Récupération des résultats
-                results = MlDllWrapper.ExportResultMlp(test.SampleCount, test.Samples, test.Outputs, 
+                res = MlDllWrapper.ExportResultMlp(test.SampleCount, test.Samples, test.Outputs, 
                     test.Infos.LayerCount, test.Infos.Dimensions, test.NodeCount, isClassification, epoch, alpha);
                 
-                managedResults = new double[test.Infos.OutputSize];
-                Marshal.Copy(results, managedResults, 0, test.Infos.OutputSize);
+                Marshal.Copy(res, managedResults, 0, test.Infos.OutputSize);
                 break;
         }
 
-        test.Outputs = managedResults;
+        //test.Outputs = managedResults;
         //Affichage des résultats dans la scène principale
-        UpdateVisualResults(test, managedResults, isClassification, false);
+        UpdateVisualResults(test, results, isClassification, false);
         
         //Nettoyage !
         MlDllWrapper.DeleteModel(model);
-        MlDllWrapper.DeleteModel(results);
+        //MlDllWrapper.DeleteModel(results);
     }
 
     public void Simulate(TypeModel model, TypeTest type, bool isClassification)
@@ -187,7 +196,7 @@ public class MlDllRun : MonoBehaviour
                     _pool[i].transform.position = simulation.position + new Vector3((float)testSimulation.Samples[i * 2],(float)testSimulation.Samples[i * 2 + 1], 0.0f); 
                     _pool[i].SetActive(true);
 
-                    _pool[i].GetComponent<Renderer>().material = testSimulation.Outputs[i] > 0 ? blueMat : redMat;
+                    _pool[i].GetComponent<Renderer>().material = testSimulation.Outputs[i] > 0 ? redMat : blueMat;
                     
                     if (!isSimulation)
                     {
@@ -196,7 +205,7 @@ public class MlDllRun : MonoBehaviour
                         _pool[j].transform.position = training.position + new Vector3((float)test.Samples[i * 2],(float)test.Samples[i * 2 + 1], 0.0f);
                         _pool[j].SetActive(true);
 
-                        _pool[j].GetComponent<Renderer>().material = results[i] > 0 ? blueMat : redMat;
+                        _pool[j].GetComponent<Renderer>().material = results[i] > 0 ? redMat : blueMat;
                     }
                 }
             }

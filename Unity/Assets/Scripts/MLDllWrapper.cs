@@ -10,7 +10,7 @@ public static class MlDllWrapper
     public static extern System.IntPtr CreateModelLinear(int inputCount, int outputCount);
     
     [DllImport("MlDll", EntryPoint = "predict_linear_model")]
-    public static extern double PredictModelLinear(System.IntPtr model, double[] samples, int inputCount, 
+    public static extern System.IntPtr PredictModelLinear(System.IntPtr model, double[] samples, int inputCount, 
         int outputCount, bool isClassification);
     
     [DllImport("MlDll", EntryPoint = "train_linear_model")]

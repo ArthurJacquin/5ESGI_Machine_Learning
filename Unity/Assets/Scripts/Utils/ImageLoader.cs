@@ -60,7 +60,7 @@ namespace Utils
 
             string path = projectFolderPath;
             
-            switch (type)
+            /*switch (type)
             {
                 case TypeImage.Color4X4:
                     path += "/DataSet_Color/DataSet_4x4";
@@ -86,22 +86,22 @@ namespace Utils
             Debug.Log("Path for real images dataset : " + pathReal);
             string path3D = projectFolderPath != "" ? path + "/DataSet_3D" : "C:/ESGI/5A_Projets/5ESGI_Machine_Learning/DataSet_Color/DataSet_4x4/DataSet_3D";
             Debug.Log("Path for 3D images dataset : " + path3D);
+            */
+            string[] files = System.IO.Directory.GetFiles(path, "*.jpg");
+            //string[] files3D = System.IO.Directory.GetFiles(path3D, "*.jpg");
 
-            string[] filesReal = System.IO.Directory.GetFiles(pathReal, "*.jpg");
-            string[] files3D = System.IO.Directory.GetFiles(path3D, "*.jpg");
-
-            List<List<float>> imagesReal = LoadImagesFromPath(filesReal);
-            List<List<float>> images3D = LoadImagesFromPath(files3D);
+            List<List<float>> imagesReal = LoadImagesFromPath(files);
+            //List<List<float>> images3D = LoadImagesFromPath(files3D);
 
             foreach (var image in imagesReal)
             {
                 _images.Add(image);
             }
 
-            foreach (var image in images3D)
-            {
-                _images.Add(image);
-            }
+            //foreach (var image in images3D)
+            //{
+            //    _images.Add(image);
+            //}
         
             Debug.Log("Found images : " + _images.Count);
         }

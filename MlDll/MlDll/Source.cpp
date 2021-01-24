@@ -105,7 +105,7 @@ extern "C" {
 		double* weights = new double[inputs_count * outputCount + outputCount];
 		srand(time(NULL));
 
-		for (auto i = 0; i < inputs_count * outputCount + 1; i++) {
+		for (auto i = 0; i < inputs_count * outputCount + outputCount; i++) {
 			weights[i] = rand() / (double)RAND_MAX * 2.0 - 1.0;
 		}
 

@@ -43,9 +43,9 @@ CasTest::CasTest(TestType t)
 		break;
 
 	case LinearMultipleMulticlass:
-		sample_count = 200;
-		samples = new double[sample_count];
-		for (size_t i = 0; i < sample_count; i++)
+		sample_count = 100;
+		samples = new double[sample_count * 2];
+		for (size_t i = 0; i < sample_count * 2; i++)
 		{
 			if (i < 100)
 				samples[i] = rand() / (double)RAND_MAX + 1.0;
@@ -56,7 +56,7 @@ CasTest::CasTest(TestType t)
 		outputs = new double[sample_count * 2];
 		for (size_t i = 0; i < sample_count; i++)
 		{
-			if (i < 100)
+			if (i < 50)
 			{
 				outputs[i * 2] = 1.0;
 				outputs[i * 2 + 1] = 0.0;

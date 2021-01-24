@@ -105,7 +105,7 @@ extern "C" {
 		double* weights = new double[inputs_count * outputCount + outputCount];
 		srand(time(NULL));
 
-		for (auto i = 0; i < inputs_count * outputCount + 1; i++) {
+		for (auto i = 0; i < inputs_count * outputCount + outputCount; i++) {
 			weights[i] = rand() / (double)RAND_MAX * 2.0 - 1.0;
 		}
 
@@ -752,7 +752,7 @@ extern "C" {
 	/// <summary>
 	/// training 
 	/// </summary>
-	__declspec(dllexport) double* training_RBF_model(double* model, int dims[], double* samples, int sampleSize, int inputSize, int dataSize, double* output, int epoch, double gamma)
+	__declspec(dllexport) double* training_RBF_model(double* model, int dims[], double samples[], int sampleSize, int inputSize, int dataSize, double* output, int epoch, double gamma)
 	{
 		std::cout << "---------------TRAINING--------------------" << std::endl;
 		
@@ -792,7 +792,7 @@ extern "C" {
 	/// <summary>
 	/// predict 
 	/// </summary>
-	__declspec(dllexport) double* predict_RBF_model(double* model, int dims[], double* samples, int inputSize, int dataSize, bool isClassification, float gamma)
+	__declspec(dllexport) double* predict_RBF_model(double* model, int dims[], double samples[], int inputSize, int dataSize, bool isClassification, float gamma)
 	{
 		std::cout << "---------------PREDICT--------------------" << std::endl;
 		int outputSize = dims[1];

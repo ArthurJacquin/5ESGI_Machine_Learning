@@ -16,21 +16,22 @@ public class MlDllRun : MonoBehaviour
     [SerializeField] private Transform simulation;
     [SerializeField] private Transform training;
     
-    public double[] RunMlDll(TypeModel modelType, TypeTest type, bool imageTest, TypeImage image, bool isClassification, int epoch, double alpha, double gamma, bool needTrain)
+    public double[] RunMlDll(TypeModel modelType, TypeTest type, bool isTestingImage, TypeImage image, bool isClassification, int epoch, double alpha, double gamma, bool needTrain)
     {
         //Initialisation des infos du test en fonction de son type
         TestClass test;
-        if (imageTest)
+        if (isTestingImage)
         {
-            List<float> img = ImageLoader.GetInstance().GetImageByIndex(0);
+            List<List<float>> allImages = ImageLoader.GetAllImages();
+            List<int> allValues = ImageLoader.GetAllValues3dOrReal();
 
-            if (img.Count <= 0)
+            if (allImages.Count <= 0)
             {
                 Debug.LogWarning("No images found. Try to import them first");
                 return new double[0];
             }
             
-            test = new TestClass(img, type);
+            test = new TestClass(allImages, allValues, image);
         }
         else
         {
@@ -150,7 +151,7 @@ public class MlDllRun : MonoBehaviour
 
         //test.Outputs = managedResults;
         //Affichage des résultats dans la scène principale
-        UpdateVisualResults(test, results, isClassification, false);
+        UpdateVisualResults(test, results, isClassification, false, isTestingImage);
         
         //Nettoyage !
         MlDllWrapper.DeleteModel(model);
@@ -159,14 +160,16 @@ public class MlDllRun : MonoBehaviour
         return results;
     }
 
-    public void Simulate(TypeModel model, TypeTest type, bool isClassification)
+    public void Simulate(TypeModel model, TypeTest type, bool isClassification, bool isTestingImage)
     {
         var test = new TestClass(type);
-        UpdateVisualResults(test, test.Outputs, isClassification, true);
+        UpdateVisualResults(test, test.Outputs, isClassification, true, isTestingImage);
     }
 
-    private void UpdateVisualResults(TestClass test, double[] results, bool isClassification, bool isSimulation)
+    private void UpdateVisualResults(TestClass test, double[] results, bool isClassification, bool isSimulation, bool isTestingImage)
     {
+        if (isTestingImage) return;
+        
         Pooler.GetInstance().InitializePool();
         _pool = new List<GameObject>(Pooler.GetInstance().GetPoolList());
 

@@ -12,7 +12,7 @@ namespace Utils
         private double[] _results;
         private TypeModel _modelType;
         private TypeTest _testType;
-        private bool _useImage;
+        private bool _isTestingImage;
         private TypeImage _imageType;
         private bool _isClassification;
         private int _epoch = 1000;
@@ -34,7 +34,7 @@ namespace Utils
             //Variables éditables dans l'inspecteur
             _modelType = (TypeModel) EditorGUILayout.EnumPopup("Type de modèle :", _modelType);
             _testType = (TypeTest)EditorGUILayout.EnumPopup("Type de test :", _testType);
-            _useImage = EditorGUILayout.Toggle("Utiliser des images ? ", _useImage);
+            _isTestingImage = EditorGUILayout.Toggle("Tester sur des images ? ", _isTestingImage);
             _imageType = (TypeImage) EditorGUILayout.EnumPopup("Type d'images :", _imageType);
             _isClassification = EditorGUILayout.Toggle("Classification activée :", _isClassification);
             _epoch = EditorGUILayout.IntField("Nombre d'itérations :", _epoch);
@@ -47,12 +47,20 @@ namespace Utils
             MlDllRun dllRun = (MlDllRun) target;
             if (GUILayout.Button("Simulate training", GUILayout.Width(135), GUILayout.Height(30)))
             {
-                dllRun.Simulate(_modelType, _testType, _isClassification);
+                dllRun.Simulate(_modelType, _testType, _isClassification, _isTestingImage);
             }
         
             if (GUILayout.Button("Training", GUILayout.Width(135), GUILayout.Height(30)))
             {
-                dllRun.RunMlDll(_modelType, _testType, _useImage, _imageType, _isClassification, _epoch, _alpha, _gamma, _needTraining);
+                //if (_isTestingImage && _imageType != ImageLoader.GetInstance().type)
+                //{
+                //    Debug.LogWarning("Seems like image type selected is not the one ImageLoader script had imported");
+                //}
+                //else
+                //{
+                //    Debug.Log("Ah bon ? ");
+                //}
+                _results = dllRun.RunMlDll(_modelType, _testType, _isTestingImage, _imageType, _isClassification, _epoch, _alpha, _gamma, _needTraining);
             }
             EditorGUILayout.EndHorizontal();
             

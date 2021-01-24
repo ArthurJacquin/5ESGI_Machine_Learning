@@ -9,6 +9,7 @@ namespace Utils
     public class MlDllEditor : Editor
     {
         private Model _model;
+        private double[] _results;
         private TypeModel _modelType;
         private TypeTest _testType;
         private bool _useImage;
@@ -19,7 +20,6 @@ namespace Utils
         private double _gamma = 0.1f;
         private bool _needTraining;
         private string _saveName;
-        private string _loadPath;
 
         public override void OnInspectorGUI()
         {
@@ -56,21 +56,26 @@ namespace Utils
             }
             EditorGUILayout.EndHorizontal();
             
-            _loadPath = EditorGUILayout.TextField("Chemin du projet :", _loadPath);
-            //loadPath =  FileBrowser.OpenSingleFile();
-            
             _saveName = EditorGUILayout.TextField("Nom de la sauvegarde : ", _saveName);
 
             EditorGUILayout.BeginHorizontal();
             GUILayout.FlexibleSpace();
             if (GUILayout.Button("Save Model", GUILayout.Width(135), GUILayout.Height(30)))
             {
+                if (_results.Length <= 0)
+                {
+                    Debug.LogWarning("Trying to save an empty model");
+                    return;
+                }
+                
+                _model.type = _modelType;
+                _model.results = _results;
                 SaveSystem.SaveModel(_model, _saveName);
             }
         
             if (GUILayout.Button("Load Model", GUILayout.Width(135), GUILayout.Height(30)))
             {
-                ModelData data = SaveSystem.LoadModel(_loadPath);
+                ModelData data = SaveSystem.LoadModel();
             }
             EditorGUILayout.EndHorizontal();
             EditorGUILayout.LabelField("", GUI.skin.horizontalSlider);

@@ -1,4 +1,5 @@
-﻿using UnityEngine;
+﻿using System.Collections.Generic;
+using UnityEngine;
 
 public enum TypeTest
 {
@@ -33,6 +34,179 @@ public class TestClass
     public TypeTest Type;
 
     public TestInfos Infos;
+
+    public TestClass(List<float> image, TypeTest type)
+    {
+        Type = type;
+        Infos = new TestInfos();
+        
+        SampleCount = image.Count;
+        Samples = new double[SampleCount];
+
+        for (int i = 0; i < image.Count; ++i)
+        {
+            Samples[i] = image[i];
+        }
+        
+        switch (type)
+        {
+            case TypeTest.LinearSimple:
+                Outputs = new double[] {1, -1, -1};
+                
+                Infos = new TestInfos()
+                {
+                    LayerCount = 2,
+                    OutputSize = 3,
+                    Dimensions = new int[] {2, 1}
+                };
+                break;
+            
+            case TypeTest.LinearMultiple:
+                Outputs = new double[SampleCount];
+                for (int i = 0; i < SampleCount; ++i)
+                {
+                    if (i < 50)
+                        Outputs[i] = 1.0f;
+                    else
+                        Outputs[i] = -1.0f;
+                }
+
+                Infos = new TestInfos() 
+                {
+                    LayerCount = 2,
+                    OutputSize = 100,
+                    Dimensions = new int[] {2, 1}
+                };
+                break;
+            
+            case TypeTest.XOR:
+                Outputs = new double[] {1, 1, -1, -1};
+                
+                Infos = new TestInfos()
+                {
+                    LayerCount = 3,
+                    OutputSize = 4,
+                    Dimensions = new int[] {2, 3, 1}
+                };
+                break;
+            
+            case TypeTest.Cross:
+                Outputs = new double[SampleCount];
+                for (int i = 0; i < SampleCount; ++i)
+                {
+                    if (Mathf.Abs((float)Samples[i * 2]) <= 0.3f || Mathf.Abs((float)Samples[i * 2 + 1]) <= 0.3f )
+                        Outputs[i] = 1.0f;
+                    else
+                        Outputs[i] = -1.0f;
+                }
+                
+                Infos = new TestInfos()
+                {
+                    LayerCount = 3,
+                    OutputSize = 500,
+                    Dimensions = new int[] {2, 4, 1}
+                };
+                break;
+            
+            case TypeTest.MultiLinear:
+                //TODO : update needed
+                Outputs = new double[] {1, -1, -1};
+                
+                Infos = new TestInfos()
+                {
+                    //TODO : update needed
+                    LayerCount = 2,
+                    OutputSize = 3,
+                    Dimensions = new int[] {2, 1}
+                };
+                break;
+            
+            case TypeTest.MultiCross:
+                //TODO : update needed
+                Outputs = new double[] {1, -1, -1};
+                
+                Infos = new TestInfos()
+                {
+                    //TODO : update needed
+                    LayerCount = 2,
+                    OutputSize = 3,
+                    Dimensions = new int[] {2, 1}
+                };
+                break;
+            
+            case TypeTest.LinearSimple2D:
+                Outputs = new double[] {2, 3};
+                Infos = new TestInfos()
+                {
+                    LayerCount = 2,
+                    OutputSize = 2,
+                    Dimensions = new int[] {1, 1}
+                };
+                break;
+            
+            case TypeTest.NonLinearSimple2D:
+                Outputs = new double[] {2, 3, 2.5f};
+                
+                Infos = new TestInfos()
+                {
+                    LayerCount = 3,
+                    OutputSize = 3,
+                    Dimensions = new int[] {1, 3, 1}
+                };
+                break;
+            
+            case TypeTest.LinearSimple3D:
+                Outputs = new double[] {2, 3, 2.5f};
+                
+                Infos = new TestInfos()
+                {
+                    LayerCount = 2,
+                    OutputSize = 3,
+                    Dimensions = new int[] {2, 1}
+                };
+                break;
+            
+            case TypeTest.LinearTricky3D:
+                Outputs = new double[] {1, 2, 3};
+                
+                Infos = new TestInfos()
+                {
+                    LayerCount = 2,
+                    OutputSize = 3,
+                    Dimensions = new int[] {2, 1}
+                };
+                break;
+            
+            case TypeTest.NonLinearSimple3D:
+                Outputs = new double[] {2, 1, -2, -1};
+                
+                Infos = new TestInfos()
+                {
+                    LayerCount = 3,
+                    OutputSize = 4,
+                    Dimensions = new int[] {2, 2, 1}
+                };
+                break;
+            
+            default:
+                Debug.Log("Create a LinearSimple as default value for test");
+                Outputs = new double[] {1, -1, -1};
+                
+                Infos = new TestInfos()
+                {
+                    LayerCount = 2,
+                    OutputSize = 3,
+                    Dimensions = new int[] {2, 1}
+                };
+                break;
+        }
+        for (int i = 0; i < Infos.LayerCount; ++i)
+        {
+            NodeCount += Infos.Dimensions[i];
+        }
+
+        NodeCount += Infos.LayerCount;
+    }
     
     public TestClass(TypeTest type)
     {

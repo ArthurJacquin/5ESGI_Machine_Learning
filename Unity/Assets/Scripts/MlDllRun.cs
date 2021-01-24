@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Runtime.InteropServices;
 using Save;
+using UnityEditor;
 using UnityEngine;
 using Utils;
 
@@ -14,49 +15,139 @@ public class MlDllRun : MonoBehaviour
 
     [SerializeField] private Transform simulation;
     [SerializeField] private Transform training;
-    //[SerializeField] private List<int> dimensions;
     
-    public void RunMlDll(TypeModel model, TypeTest type, bool isClassification, int epoch, double alpha)
+    public void RunMlDll(TypeModel modelType, TypeTest type, bool imageTest, TypeImage image, bool isClassification, int epoch, double alpha, double gamma, bool needTrain)
     {
         //Initialisation des infos du test en fonction de son type
-        var test = new TestClass(type);
-        //test.DisplayInfos();
+        TestClass test;
+        if (imageTest)
+        {
+            List<float> img = ImageLoader.GetInstance().GetImageByIndex(0);
 
+            if (img.Count <= 0)
+            {
+                Debug.LogWarning("No images found. Try to import them first");
+                return;
+            }
+            
+            test = new TestClass(img, type);
+        }
+        else
+        {
+            test = new TestClass(type);
+        }
+
+        IntPtr model;
         IntPtr results;
+        double resultat;
+        double[] managedResults;
         
-        //TODO : Selon le modèle, appeler la bonne fonction de la dll
-        switch (model)
+        switch (modelType)
         {
             case TypeModel.Linear:
-                //Récupération des résultats via la dll
-                results = MlDllWrapper.ExportResultMlp(test.SampleCount, test.Samples, test.Outputs, 
-                    test.Infos.LayerCount, test.Infos.Dimensions, test.NodeCount, isClassification, epoch, alpha);
+                //Création du modèle
+                model = MlDllWrapper.CreateModelLinear(test.SampleCount, test.Infos.OutputSize);
+
+                if (needTrain)
+                {
+                    //TODO : c'est censé me retourner un double* ça
+                    MlDllWrapper.TrainModelLinear(model, test.Samples, test.SampleCount, test.SampleCount,
+                        test.Outputs, test.Infos.OutputSize, epoch, alpha, isClassification);
+                }
+                
+                //TODO : A suppr
+                results = MlDllWrapper.PredictModelMLP(model, test.Samples, test.Infos.Dimensions,
+                    test.Infos.LayerCount, isClassification);
+                
+                //TODO : pourquoi je récupère qu'un double et pas un double* ??
+                //Récupération des résultats
+                resultat = MlDllWrapper.PredictModelLinear(model, test.Samples, test.SampleCount, 
+                    test.Infos.OutputSize, isClassification);
+                
+                managedResults = new double[test.Infos.OutputSize];
+                Marshal.Copy(results, managedResults, 0, test.Infos.OutputSize);
                 break;
             
             case TypeModel.MLP:
-                results = MlDllWrapper.ExportResultMlp(test.SampleCount, test.Samples, test.Outputs, 
-                    test.Infos.LayerCount, test.Infos.Dimensions, test.NodeCount, isClassification, epoch, alpha);
+                //Création du modèle
+                model = MlDllWrapper.CreateModelMLP(test.Infos.Dimensions, test.Infos.LayerCount);
+                
+                if (needTrain)
+                {
+                    model = MlDllWrapper.TrainModelMLP(model, test.Samples, test.SampleCount, test.Outputs,
+                        test.Infos.Dimensions, test.Infos.LayerCount, isClassification, epoch, alpha);
+                }
+
+                //Obligée de faire ça sinon je peux pas changer les valeurs de results dans la boucle for
+                results = MlDllWrapper.PredictModelMLP(model, test.Samples, test.Infos.Dimensions,
+                    test.Infos.LayerCount, isClassification);
+                
+                var managedTmp = new double[test.SampleCount]; 
+                managedResults = new double[test.SampleCount];
+                //Récupération des résultats
+                for (int i = 0; i < test.SampleCount; ++i)
+                {
+                    double[] samples = new double[] {test.Samples[i * 2], test.Samples[i * 2 + 1]};
+                    var tmp = MlDllWrapper.PredictModelMLP(model, samples, test.Infos.Dimensions,
+                        test.Infos.LayerCount, isClassification);
+                    
+                    Marshal.Copy(tmp, managedTmp, 0, test.SampleCount);
+                    Marshal.Copy(results, managedResults, 0, test.SampleCount);
+                    
+                    if (test.Infos.Dimensions[test.Infos.LayerCount - 1] == 1)
+                    {
+                        managedResults[i] = managedTmp[test.NodeCount - 1];
+                    }
+                    else
+                    {
+                        managedResults[i] = managedTmp[test.NodeCount - 1];
+                    }
+                }
                 break;
             
             case TypeModel.RBF:
-                results = MlDllWrapper.ExportResultMlp(test.SampleCount, test.Samples, test.Outputs, 
-                    test.Infos.LayerCount, test.Infos.Dimensions, test.NodeCount, isClassification, epoch, alpha);
+                //Création du modèle
+                //TODO : implémenter les dataSize dans la classe Test
+                model = MlDllWrapper.CreateModelRBF(test.Infos.Dimensions, test.SampleCount);
+
+                if (needTrain)
+                {
+                    //Training : model = MlDllWrapper.TrainModelRBF();
+                }
+                
+                //Récupération des résultats
+                results = MlDllWrapper.PredictModelRBF(model, test.Infos.Dimensions, test.Samples, test.SampleCount,
+                    test.SampleCount, isClassification, gamma);
+                
+                managedResults = new double[test.Infos.OutputSize];
+                Marshal.Copy(results, managedResults, 0, test.Infos.OutputSize);
                 break;
             
             default:
+                //Création du modèle
+                model = MlDllWrapper.CreateModelLinear(test.SampleCount, test.Infos.OutputSize);
+                
+                if (needTrain)
+                {
+                    //Training
+                }
+                
+                //Récupération des résultats
                 results = MlDllWrapper.ExportResultMlp(test.SampleCount, test.Samples, test.Outputs, 
                     test.Infos.LayerCount, test.Infos.Dimensions, test.NodeCount, isClassification, epoch, alpha);
+                
+                managedResults = new double[test.Infos.OutputSize];
+                Marshal.Copy(results, managedResults, 0, test.Infos.OutputSize);
                 break;
         }
-        
-        //Gestion des résultats
-        var managedResults = new double[test.Infos.OutputSize];
-        Marshal.Copy(results, managedResults, 0, test.Infos.OutputSize);
-        
+
         test.Outputs = managedResults;
         //Affichage des résultats dans la scène principale
         UpdateVisualResults(test, managedResults, isClassification, false);
-        //test.DisplayResults();
+        
+        //Nettoyage !
+        MlDllWrapper.DeleteModel(model);
+        MlDllWrapper.DeleteModel(results);
     }
 
     public void Simulate(TypeModel model, TypeTest type, bool isClassification)
@@ -109,19 +200,19 @@ public class MlDllRun : MonoBehaviour
                     }
                 }
             }
-            else //TODO : multi class
+            else //TODO : multiclass à tester
             {
-                for (int i = 0; i < results.Length; i += 3)
+                for (int i = 0; i < results.Length; i++)
                 {
                     //résultats de la simulation
                     _pool[i].transform.position = simulation.position + new Vector3((float)testSimulation.Samples[i * 2],(float)testSimulation.Samples[i * 2 + 1], 0.0f); 
                     _pool[i].SetActive(true);
 
-                    if(testSimulation.Outputs[i] > 0.8f && testSimulation.Outputs[i + 1] < 0.8f && testSimulation.Outputs[i + 2] < 0.8f)
+                    if(testSimulation.Outputs[i] == 0)
                         _pool[i].GetComponent<Renderer>().material = blueMat;
-                    else if(testSimulation.Outputs[i] < 0.8f && testSimulation.Outputs[i + 1] > 0.8f && testSimulation.Outputs[i + 2] < 0.8f)
+                    else if(Math.Abs(testSimulation.Outputs[i] - 1) < 0.01f)
                         _pool[i].GetComponent<Renderer>().material = redMat;
-                    else if(testSimulation.Outputs[i] < 0.8f && testSimulation.Outputs[i + 1] < 0.8f && testSimulation.Outputs[i + 2] > 0.8f)
+                    else if(Math.Abs(testSimulation.Outputs[i] - 2) < 0.01f)
                         _pool[i].GetComponent<Renderer>().material = greenMat;
                     else 
                         _pool[i].GetComponent<Renderer>().material.color = Color.magenta;
@@ -133,11 +224,11 @@ public class MlDllRun : MonoBehaviour
                         _pool[j].transform.position = training.position + new Vector3((float)test.Samples[i * 2],(float)test.Samples[i * 2 + 1], 0.0f);
                         _pool[j].SetActive(true);
 
-                        if(testSimulation.Outputs[i] > 0.8f && testSimulation.Outputs[i + 1] < 0.8f && testSimulation.Outputs[i + 2] < 0.8f)
+                        if(test.Outputs[i] == 0)
                             _pool[j].GetComponent<Renderer>().material = blueMat;
-                        else if(testSimulation.Outputs[i] < 0.8f && testSimulation.Outputs[i + 1] > 0.8f && testSimulation.Outputs[i + 2] < 0.8f)
+                        else if(Math.Abs(test.Outputs[i] - 1) < 0.1f)
                             _pool[j].GetComponent<Renderer>().material = redMat;
-                        else if(testSimulation.Outputs[i] < 0.8f && testSimulation.Outputs[i + 1] < 0.8f && testSimulation.Outputs[i + 2] > 0.8f)
+                        else if(Math.Abs(test.Outputs[i] - 2) < 0.1f)
                             _pool[j].GetComponent<Renderer>().material = greenMat;
                         else 
                             _pool[j].GetComponent<Renderer>().material.color = Color.magenta;

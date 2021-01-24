@@ -17,9 +17,7 @@ public static class MlDllWrapper
     public static extern void TrainModelLinear(System.IntPtr model, double[] allSamples, int sampleCount,
         int inputCount, double[] allExpectedOutputs, int outputCount, int epochs, double learningRate, bool isClassification);
     
-    [DllImport("MlDll", EntryPoint = "delete_model")]
-    public static extern void DeleteModelLinear(System.IntPtr model);
-    
+
     //---------------------------MLP-----------------------------------------------
 
     [DllImport("MlDll", EntryPoint = "create_MLP_model")]
@@ -49,5 +47,11 @@ public static class MlDllWrapper
 
     [DllImport("MlDll", EntryPoint = "predict_RBF_model")]
     public static extern System.IntPtr PredictModelRBF(System.IntPtr model, int[] dims, double[] samples, int inputSize,
-        int dataSize, bool isClassification, float gamma);
+        int dataSize, bool isClassification, double gamma);
+    
+    
+    //----------------------------------------------------------------------------
+    
+    [DllImport("MlDll", EntryPoint = "delete_model")]
+    public static extern void DeleteModel(System.IntPtr model);
 }

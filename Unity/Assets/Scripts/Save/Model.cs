@@ -13,7 +13,5 @@ namespace Save
    {
       public double[] results;
       public TypeModel type;
-
-      
    }
 }

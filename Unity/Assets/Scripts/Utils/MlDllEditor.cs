@@ -11,9 +11,13 @@ namespace Utils
         private Model _model;
         private TypeModel _modelType;
         private TypeTest _testType;
+        private bool _useImage;
+        private TypeImage _imageType;
         private bool _isClassification;
         private int _epoch = 1000;
         private double _alpha = 0.1f;
+        private double _gamma = 0.1f;
+        private bool _needTraining;
         private string _saveName;
         private string _loadPath;
 
@@ -21,12 +25,22 @@ namespace Utils
         {
             DrawDefaultInspector();
 
+            EditorGUILayout.LabelField("", GUI.skin.horizontalSlider);
+            EditorGUILayout.BeginHorizontal();
+            GUILayout.FlexibleSpace();
+            EditorGUILayout.LabelField("Variables à configurer :");
+            EditorGUILayout.EndHorizontal();
+            
             //Variables éditables dans l'inspecteur
             _modelType = (TypeModel) EditorGUILayout.EnumPopup("Type de modèle :", _modelType);
             _testType = (TypeTest)EditorGUILayout.EnumPopup("Type de test :", _testType);
+            _useImage = EditorGUILayout.Toggle("Utiliser des images ? ", _useImage);
+            _imageType = (TypeImage) EditorGUILayout.EnumPopup("Type d'images :", _imageType);
             _isClassification = EditorGUILayout.Toggle("Classification activée :", _isClassification);
             _epoch = EditorGUILayout.IntField("Nombre d'itérations :", _epoch);
             _alpha = EditorGUILayout.DoubleField("Alpha :", _alpha);
+            _gamma = EditorGUILayout.DoubleField("Gamma :", _gamma);
+            _needTraining = EditorGUILayout.Toggle("Entrainer le modèle ?", _needTraining);
 
             EditorGUILayout.BeginHorizontal();
             GUILayout.FlexibleSpace();
@@ -38,7 +52,7 @@ namespace Utils
         
             if (GUILayout.Button("Training", GUILayout.Width(135), GUILayout.Height(30)))
             {
-                dllRun.RunMlDll(_modelType, _testType, _isClassification, _epoch, _alpha);
+                dllRun.RunMlDll(_modelType, _testType, _useImage, _imageType, _isClassification, _epoch, _alpha, _gamma, _needTraining);
             }
             EditorGUILayout.EndHorizontal();
             
@@ -59,6 +73,7 @@ namespace Utils
                 ModelData data = SaveSystem.LoadModel(_loadPath);
             }
             EditorGUILayout.EndHorizontal();
+            EditorGUILayout.LabelField("", GUI.skin.horizontalSlider);
         }
     }
 }

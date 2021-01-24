@@ -37,28 +37,24 @@ public class MlDllRun : MonoBehaviour
             test = new TestClass(type);
         }
 
-        IntPtr model;
-        IntPtr res;
+        IntPtr model = new IntPtr();
+        IntPtr res = new IntPtr();
         double[] results = new double[test.SampleCount];
-        double[] managedResults = new double[test.NbClass];
+        double[] managedResults = new double[1];
         
         switch (modelType)
         {
             case TypeModel.Linear:
                 //Création du modèle
-                model = MlDllWrapper.CreateModelLinear(test.InputCount, test.NbClass);
+                model = MlDllWrapper.CreateModelLinear(test.Datasize, test.NbClass);
 
                 if (needTrain)
                 {
                     //TODO : c'est censé me retourner un double* ça
-                    MlDllWrapper.TrainModelLinear(model, test.Samples, test.SampleCount, test.InputCount,
+                    MlDllWrapper.TrainModelLinear(model, test.Samples, test.SampleCount, test.Datasize,
                         test.Outputs, test.NbClass, epoch, alpha, isClassification);
                 }
 
-                var w = new double[test.NbClass * test.NbClass + test.NbClass];
-                Marshal.Copy(model, w, 0, test.NbClass * test.NbClass + test.NbClass);
-
-                //TODO : pourquoi je récupère qu'un double et pas un double* ??
                 //Récupération des résultats
                 for (int i = 0; i < test.SampleCount; i++)
                 {
@@ -69,10 +65,10 @@ public class MlDllRun : MonoBehaviour
                         sample[j] = test.Samples[id];
                     }
 
-                    res = MlDllWrapper.PredictModelLinear(model, sample, test.InputCount, 
+                    res = MlDllWrapper.PredictModelLinear(model, sample, test.Datasize, 
                         test.NbClass, isClassification);
 
-                    Marshal.Copy(res, managedResults, 0, test.NbClass);
+                    Marshal.Copy(res, managedResults, 0, 1);
 
                     results[i] = managedResults[0];
                 }
@@ -81,56 +77,66 @@ public class MlDllRun : MonoBehaviour
             
             case TypeModel.MLP:
                 //Création du modèle
-                model = MlDllWrapper.CreateModelMLP(test.Infos.Dimensions, test.Infos.LayerCount);
-                
+                model = MlDllWrapper.CreateModelMLP(test.Infos.DimensionsMLP, test.Infos.LayerCount);
+
                 if (needTrain)
                 {
-                    model = MlDllWrapper.TrainModelMLP(model, test.Samples, test.SampleCount, test.Outputs,
-                        test.Infos.Dimensions, test.Infos.LayerCount, isClassification, epoch, alpha);
+                    MlDllWrapper.TrainModelMLP(model, test.Samples, test.SampleCount, test.Outputs, test.Infos.DimensionsMLP,  
+                                                test.Infos.LayerCount, isClassification, epoch, alpha);
                 }
 
-                //Obligée de faire ça sinon je peux pas changer les valeurs de results dans la boucle for
-                res = MlDllWrapper.PredictModelMLP(model, test.Samples, test.Infos.Dimensions,
-                    test.Infos.LayerCount, isClassification);
-                
-                var managedTmp = new double[test.SampleCount]; 
+                //double[] w = new double[test.Infos.DimensionsRBF[0] * test.Infos.DimensionsRBF[1] + test.Infos.DimensionsRBF[0] * test.Datasize];
+                //Marshal.Copy(model, w, 0, test.Infos.DimensionsRBF[0] * test.Infos.DimensionsRBF[1] + test.Infos.DimensionsRBF[0] * test.Datasize);
+
                 //Récupération des résultats
-                for (int i = 0; i < test.SampleCount; ++i)
+                for (int i = 0; i < test.SampleCount; i++)
                 {
-                    double[] samples = new double[] {test.Samples[i * 2], test.Samples[i * 2 + 1]};
-                    var tmp = MlDllWrapper.PredictModelMLP(model, samples, test.Infos.Dimensions,
-                        test.Infos.LayerCount, isClassification);
-                    
-                    Marshal.Copy(tmp, managedTmp, 0, test.SampleCount);
-                    Marshal.Copy(res, managedResults, 0, test.SampleCount);
-                    
-                    if (test.Infos.Dimensions[test.Infos.LayerCount - 1] == 1)
+                    double[] sample = new double[test.InputCount * test.Datasize];
+                    for (int j = 0; j < test.InputCount * test.Datasize; j++)
                     {
-                        managedResults[i] = managedTmp[test.NodeCount - 1];
+                        int id = i * test.InputCount * test.Datasize + j;
+                        sample[j] = test.Samples[id];
                     }
-                    else
-                    {
-                        managedResults[i] = managedTmp[test.NodeCount - 1];
-                    }
+
+                    res = MlDllWrapper.PredictModelMLP(model, sample, test.Infos.DimensionsMLP, test.Infos.LayerCount, isClassification);
+
+                    Marshal.Copy(res, managedResults, 0, 1);
+
+                    results[i] = managedResults[0];
                 }
                 break;
             
             case TypeModel.RBF:
                 //Création du modèle
-                //TODO : implémenter les dataSize dans la classe Test
-                model = MlDllWrapper.CreateModelRBF(test.Infos.Dimensions, test.SampleCount);
+                model = MlDllWrapper.CreateModelRBF(test.Infos.DimensionsRBF, test.Datasize);
 
                 if (needTrain)
                 {
-                    //Training : model = MlDllWrapper.TrainModelRBF();
+                    MlDllWrapper.TrainModelRBF(model, test.Infos.DimensionsRBF, test.Samples, test.SampleCount,
+                                                test.InputCount, test.Datasize, test.Outputs, epoch, gamma);
                 }
-                
+
+                //double[] w = new double[test.Infos.DimensionsRBF[0] * test.Infos.DimensionsRBF[1] + test.Infos.DimensionsRBF[0] * test.Datasize];
+                //Marshal.Copy(model, w, 0, test.Infos.DimensionsRBF[0] * test.Infos.DimensionsRBF[1] + test.Infos.DimensionsRBF[0] * test.Datasize);
+
                 //Récupération des résultats
-                res = MlDllWrapper.PredictModelRBF(model, test.Infos.Dimensions, test.Samples, test.SampleCount,
-                    test.SampleCount, isClassification, gamma);
-                
-                managedResults = new double[test.Infos.OutputSize];
-                Marshal.Copy(res, managedResults, 0, test.Infos.OutputSize);
+                for (int i = 0; i < test.SampleCount; i++)
+                {
+                    double[] sample = new double[test.InputCount * test.Datasize];
+                    for (int j = 0; j < test.InputCount * test.Datasize; j++)
+                    {
+                        int id = i * test.InputCount * test.Datasize + j;
+                        sample[j] = test.Samples[id];
+                    }
+
+                    res = MlDllWrapper.PredictModelRBF(model, test.Infos.DimensionsRBF, sample, test.InputCount,
+                                                        test.Datasize, isClassification, gamma);
+
+                    Marshal.Copy(res, managedResults, 0, 1);
+
+                    results[i] = managedResults[0];
+                }
+
                 break;
             
             default:
@@ -144,7 +150,7 @@ public class MlDllRun : MonoBehaviour
                 
                 //Récupération des résultats
                 res = MlDllWrapper.ExportResultMlp(test.SampleCount, test.Samples, test.Outputs, 
-                    test.Infos.LayerCount, test.Infos.Dimensions, test.NodeCount, isClassification, epoch, alpha);
+                    test.Infos.LayerCount, test.Infos.DimensionsMLP, test.NodeCount, isClassification, epoch, alpha);
                 
                 Marshal.Copy(res, managedResults, 0, test.Infos.OutputSize);
                 break;
@@ -156,7 +162,7 @@ public class MlDllRun : MonoBehaviour
         
         //Nettoyage !
         MlDllWrapper.DeleteModel(model);
-        //MlDllWrapper.DeleteModel(results);
+        //MlDllWrapper.DeleteModel(res);
     }
 
     public void Simulate(TypeModel model, TypeTest type, bool isClassification)
@@ -188,7 +194,7 @@ public class MlDllRun : MonoBehaviour
         
         if (isClassification)
         {
-            if (test.Infos.Dimensions[test.Infos.LayerCount - 1] == 1)
+            if (test.Infos.DimensionsMLP[test.Infos.LayerCount - 1] == 1)
             {
                 for (int i = 0; i < results.Length; ++i)
                 {
@@ -251,7 +257,7 @@ public class MlDllRun : MonoBehaviour
             {
                 int j = i + results.Length + 1;
                 
-                if (test.Infos.Dimensions[0] == 1)
+                if (test.Infos.DimensionsMLP[0] == 1)
                 {
                     //Résultats de la simulation
                     _pool[i].transform.position = simulation.position + new Vector3((float)testSimulation.Samples[i],(float)testSimulation.Outputs[i], 0.0f);

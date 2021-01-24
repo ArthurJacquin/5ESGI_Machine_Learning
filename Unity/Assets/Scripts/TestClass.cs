@@ -20,7 +20,8 @@ public struct TestInfos
 {
     public int LayerCount;
     public int OutputSize;
-    public int[] Dimensions;
+    public int[] DimensionsMLP;
+    public int[] DimensionsRBF;
 }
 
 public class TestClass
@@ -60,7 +61,7 @@ public class TestClass
                 {
                     LayerCount = 2,
                     OutputSize = 3,
-                    Dimensions = new int[] {2, 1}
+                    DimensionsMLP = new int[] {2, 1}
                 };
                 break;
             
@@ -78,7 +79,7 @@ public class TestClass
                 {
                     LayerCount = 2,
                     OutputSize = 100,
-                    Dimensions = new int[] {2, 1}
+                    DimensionsMLP = new int[] {2, 1}
                 };
                 break;
             
@@ -89,7 +90,7 @@ public class TestClass
                 {
                     LayerCount = 3,
                     OutputSize = 4,
-                    Dimensions = new int[] {2, 3, 1}
+                    DimensionsMLP = new int[] {2, 3, 1}
                 };
                 break;
             
@@ -107,7 +108,7 @@ public class TestClass
                 {
                     LayerCount = 3,
                     OutputSize = 500,
-                    Dimensions = new int[] {2, 4, 1}
+                    DimensionsMLP = new int[] {2, 4, 1}
                 };
                 break;
             
@@ -120,7 +121,7 @@ public class TestClass
                     //TODO : update needed
                     LayerCount = 2,
                     OutputSize = 3,
-                    Dimensions = new int[] {2, 1}
+                    DimensionsMLP = new int[] {2, 1}
                 };
                 break;
             
@@ -133,7 +134,7 @@ public class TestClass
                     //TODO : update needed
                     LayerCount = 2,
                     OutputSize = 3,
-                    Dimensions = new int[] {2, 1}
+                    DimensionsMLP = new int[] {2, 1}
                 };
                 break;
             
@@ -143,7 +144,7 @@ public class TestClass
                 {
                     LayerCount = 2,
                     OutputSize = 2,
-                    Dimensions = new int[] {1, 1}
+                    DimensionsMLP = new int[] {1, 1}
                 };
                 break;
             
@@ -154,7 +155,7 @@ public class TestClass
                 {
                     LayerCount = 3,
                     OutputSize = 3,
-                    Dimensions = new int[] {1, 3, 1}
+                    DimensionsMLP = new int[] {1, 3, 1}
                 };
                 break;
             
@@ -165,7 +166,7 @@ public class TestClass
                 {
                     LayerCount = 2,
                     OutputSize = 3,
-                    Dimensions = new int[] {2, 1}
+                    DimensionsMLP = new int[] {2, 1}
                 };
                 break;
             
@@ -176,7 +177,7 @@ public class TestClass
                 {
                     LayerCount = 2,
                     OutputSize = 3,
-                    Dimensions = new int[] {2, 1}
+                    DimensionsMLP = new int[] {2, 1}
                 };
                 break;
             
@@ -187,7 +188,7 @@ public class TestClass
                 {
                     LayerCount = 3,
                     OutputSize = 4,
-                    Dimensions = new int[] {2, 2, 1}
+                    DimensionsMLP = new int[] {2, 2, 1}
                 };
                 break;
             
@@ -199,13 +200,13 @@ public class TestClass
                 {
                     LayerCount = 2,
                     OutputSize = 3,
-                    Dimensions = new int[] {2, 1}
+                    DimensionsMLP = new int[] {2, 1}
                 };
                 break;
         }
         for (int i = 0; i < Infos.LayerCount; ++i)
         {
-            NodeCount += Infos.Dimensions[i];
+            NodeCount += Infos.DimensionsMLP[i];
         }
 
         NodeCount += Infos.LayerCount;
@@ -221,23 +222,24 @@ public class TestClass
         {
             case TypeTest.LinearSimple:
                 SampleCount = 3;
-                InputCount = 2;
-                Datasize = 1;
+                InputCount = 1;
+                Datasize = 2;
 
                 Samples = new double[] {1.0, 1.0, 2.0, 3.0, 3.0, 3.0};
                 Outputs = new double[] {1, 0, 0, 1, 0, 1};
 
                 Infos = new TestInfos()
                 {
-                    LayerCount = 2,
+                    LayerCount = 3,
                     OutputSize = 3,
-                    Dimensions = new int[] {2, 1}
+                    DimensionsMLP = new int[] {2, 3, 2 },
+                    DimensionsRBF = new int[] { 3, 2 }
                 };
                 break;
             
             case TypeTest.LinearMultiple:
-                InputCount = 2;
-                Datasize = 1;
+                InputCount = 1;
+                Datasize = 2;
                 SampleCount = 100;
                 Samples = new double[SampleCount * 2];
                 for (int i = 0; i < SampleCount * 2; ++i)
@@ -265,9 +267,10 @@ public class TestClass
 
                 Infos = new TestInfos() 
                 {
-                    LayerCount = 2,
                     OutputSize = 100,
-                    Dimensions = new int[] {2, 2}
+                    LayerCount = 3,
+                    DimensionsMLP = new int[] {2, 3, 2},
+                    DimensionsRBF = new int[] { 100, 2 }
                 };
                 break;
             
@@ -280,7 +283,7 @@ public class TestClass
                 {
                     LayerCount = 3,
                     OutputSize = 4,
-                    Dimensions = new int[] {2, 3, 1}
+                    DimensionsMLP = new int[] {2, 3, 1}
                 };
                 break;
             
@@ -305,7 +308,7 @@ public class TestClass
                 {
                     LayerCount = 3,
                     OutputSize = 500,
-                    Dimensions = new int[] {2, 4, 1}
+                    DimensionsMLP = new int[] {2, 4, 1}
                 };
                 break;
             
@@ -321,7 +324,7 @@ public class TestClass
                     //TODO : update needed
                     LayerCount = 2,
                     OutputSize = 3,
-                    Dimensions = new int[] {2, 2}
+                    DimensionsMLP = new int[] {2, 2}
                 };
                 break;
             
@@ -337,7 +340,7 @@ public class TestClass
                     //TODO : update needed
                     LayerCount = 2,
                     OutputSize = 3,
-                    Dimensions = new int[] {2, 1}
+                    DimensionsMLP = new int[] {2, 1}
                 };
                 break;
             
@@ -349,7 +352,7 @@ public class TestClass
                 {
                     LayerCount = 2,
                     OutputSize = 2,
-                    Dimensions = new int[] {1, 1}
+                    DimensionsMLP = new int[] {1, 1}
                 };
                 break;
             
@@ -362,7 +365,7 @@ public class TestClass
                 {
                     LayerCount = 3,
                     OutputSize = 3,
-                    Dimensions = new int[] {1, 3, 1}
+                    DimensionsMLP = new int[] {1, 3, 1}
                 };
                 break;
             
@@ -375,7 +378,7 @@ public class TestClass
                 {
                     LayerCount = 2,
                     OutputSize = 3,
-                    Dimensions = new int[] {2, 1}
+                    DimensionsMLP = new int[] {2, 1}
                 };
                 break;
             
@@ -388,7 +391,7 @@ public class TestClass
                 {
                     LayerCount = 2,
                     OutputSize = 3,
-                    Dimensions = new int[] {2, 1}
+                    DimensionsMLP = new int[] {2, 1}
                 };
                 break;
             
@@ -401,7 +404,7 @@ public class TestClass
                 {
                     LayerCount = 3,
                     OutputSize = 4,
-                    Dimensions = new int[] {2, 2, 1}
+                    DimensionsMLP = new int[] {2, 2, 1}
                 };
                 break;
             
@@ -415,13 +418,13 @@ public class TestClass
                 {
                     LayerCount = 2,
                     OutputSize = 3,
-                    Dimensions = new int[] {2, 1}
+                    DimensionsMLP = new int[] {2, 1}
                 };
                 break;
         }
         for (int i = 0; i < Infos.LayerCount; ++i)
         {
-            NodeCount += Infos.Dimensions[i];
+            NodeCount += Infos.DimensionsMLP[i];
         }
 
         NodeCount += Infos.LayerCount;

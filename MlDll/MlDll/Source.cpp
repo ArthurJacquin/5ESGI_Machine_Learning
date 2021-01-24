@@ -752,7 +752,7 @@ extern "C" {
 	/// <summary>
 	/// training 
 	/// </summary>
-	__declspec(dllexport) double* training_RBF_model(double* model, int dims[], double* samples, int sampleSize, int inputSize, int dataSize, double* output, int epoch, double gamma)
+	__declspec(dllexport) double* training_RBF_model(double* model, int dims[], double samples[], int sampleSize, int inputSize, int dataSize, double* output, int epoch, double gamma)
 	{
 		std::cout << "---------------TRAINING--------------------" << std::endl;
 		
@@ -792,7 +792,7 @@ extern "C" {
 	/// <summary>
 	/// predict 
 	/// </summary>
-	__declspec(dllexport) double* predict_RBF_model(double* model, int dims[], double* samples, int inputSize, int dataSize, bool isClassification, float gamma)
+	__declspec(dllexport) double* predict_RBF_model(double* model, int dims[], double samples[], int inputSize, int dataSize, bool isClassification, float gamma)
 	{
 		std::cout << "---------------PREDICT--------------------" << std::endl;
 		int outputSize = dims[1];

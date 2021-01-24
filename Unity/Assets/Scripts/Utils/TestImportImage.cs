@@ -1,12 +1,15 @@
 ﻿using UnityEngine;
 
-public class TestImportImage : MonoBehaviour
+namespace Utils
 {
-    private static readonly int MainTex = Shader.PropertyToID("_MainTex");
-
-    public void ApplyTexture(Texture2D tex)
+    public class TestImportImage : MonoBehaviour
     {
-        this.gameObject.GetComponent<Renderer>().material.SetTexture(MainTex, tex);
-        this.gameObject.SetActive(true);
+        private static readonly int MainTex = Shader.PropertyToID("_MainTex");
+
+        public void ApplyTexture(Texture2D tex)
+        {
+            this.gameObject.GetComponent<Renderer>().material.SetTexture(MainTex, tex);
+            this.gameObject.SetActive(true);
+        }
     }
 }

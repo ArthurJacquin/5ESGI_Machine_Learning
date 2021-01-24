@@ -1,14 +1,17 @@
-﻿using System.IO;
+﻿using System;
+using System.IO;
 using System.Runtime.Serialization.Formatters.Binary;
 using Save;
 using UnityEngine;
 
 public static class SaveSystem
 {
-   public static void SaveModel(Model model, string path)
+   public static void SaveModel(Model model, string name)
    {
+      string path = Application.dataPath + "/Saves/model_" + name;
+      //TODO : créer une nouvelle sauvegarde pour pas écraser l'ancienne si existante
+      
       BinaryFormatter formatter = new BinaryFormatter();
-      path = path + "/model.fun";
       FileStream stream = new FileStream(path, FileMode.Create);
       
       ModelData data = new ModelData(model);

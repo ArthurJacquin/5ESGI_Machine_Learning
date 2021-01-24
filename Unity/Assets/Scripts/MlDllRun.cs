@@ -10,6 +10,9 @@ public class MlDllRun : MonoBehaviour
     [SerializeField] private Material greenMat;
     [SerializeField] private Material redMat;
     [SerializeField] private Material blueMat;
+
+    [SerializeField] private Transform simulation;
+    [SerializeField] private Transform training;
     //[SerializeField] private List<int> dimensions;
     
     public void RunMlDll(TypeModel model, TypeTest type, bool isClassification, int epoch, double alpha)
@@ -50,18 +53,18 @@ public class MlDllRun : MonoBehaviour
         Marshal.Copy(results, managedResults, 0, test.Infos.OutputSize);
         
         test.Outputs = managedResults;
-        //Affichage des résultats avec les sphères
-        UpdateVisualResults(test, managedResults, isClassification);
+        //Affichage des résultats dans la scène principale
+        UpdateVisualResults(test, managedResults, isClassification, false);
         //test.DisplayResults();
     }
 
     public void Simulate(TypeModel model, TypeTest type, bool isClassification)
     {
         var test = new TestClass(type);
-        UpdateVisualResults(test, test.Outputs, isClassification);
+        UpdateVisualResults(test, test.Outputs, isClassification, true);
     }
 
-    private void UpdateVisualResults(TestClass test, double[] results, bool isClassification)
+    private void UpdateVisualResults(TestClass test, double[] results, bool isClassification, bool isSimulation)
     {
         Pooler.GetInstance().InitializePool();
         _pool = new List<GameObject>(Pooler.GetInstance().GetPoolList());
@@ -77,20 +80,33 @@ public class MlDllRun : MonoBehaviour
             Debug.LogWarning("There isnt enough objects in pool");
             return;
         }
-
+        
+        var testSimulation = new TestClass(test.Type);
+        
         if (isClassification)
         {
             if (test.Infos.Dimensions[test.Infos.LayerCount - 1] == 1)
             {
                 for (int i = 0; i < results.Length; ++i)
                 {
-                    _pool[i].transform.position = new Vector3((float)test.Samples[i * 2],(float)test.Samples[i * 2 + 1], 0.0f);
+                    //résultats de la simulation
+                    _pool[i].transform.position = simulation.position + new Vector3((float)testSimulation.Samples[i * 2],(float)testSimulation.Samples[i * 2 + 1], 0.0f); 
                     _pool[i].SetActive(true);
 
-                    _pool[i].GetComponent<Renderer>().material = results[i] > 0 ? blueMat : redMat;
+                    _pool[i].GetComponent<Renderer>().material = testSimulation.Outputs[i] > 0 ? blueMat : redMat;
+                    
+                    if (!isSimulation)
+                    {
+                        int j = i + results.Length + 1;
+                        //résultats du training
+                        _pool[j].transform.position = training.position + new Vector3((float)test.Samples[i * 2],(float)test.Samples[i * 2 + 1], 0.0f);
+                        _pool[j].SetActive(true);
+
+                        _pool[j].GetComponent<Renderer>().material = results[i] > 0 ? blueMat : redMat;
+                    }
                 }
             }
-            else //multi class
+            else //TODO : multi class
             {
            
             }
@@ -99,17 +115,39 @@ public class MlDllRun : MonoBehaviour
         {
             for (int i = 0; i < results.Length; ++i)
             {
+                int j = i + results.Length + 1;
+                
                 if (test.Infos.Dimensions[0] == 1)
                 {
-                    _pool[i].transform.position = new Vector3((float)test.Samples[i],(float)results[i], 0.0f);
+                    //Résultats de la simulation
+                    _pool[i].transform.position = simulation.position + new Vector3((float)testSimulation.Samples[i],(float)testSimulation.Outputs[i], 0.0f);
+
+                    if (!isSimulation)
+                    {
+                        //résultats du training
+                        _pool[j].transform.position = training.position + new Vector3((float)test.Samples[i],(float)results[i], 0.0f);
+                    }
                 }
                 else
                 {
-                    _pool[i].transform.position = new Vector3((float)test.Samples[i * 2],(float)test.Samples[i * 2 + 1], (float)results[i]);
-                
+                    //résultats de la simulation
+                    _pool[i].transform.position = simulation.position + new Vector3((float)testSimulation.Samples[i * 2],(float)testSimulation.Samples[i * 2 + 1], (float)testSimulation.Outputs[i]);
+
+                    if (!isSimulation)
+                    {
+                        //résultats du training
+                        _pool[j].transform.position = training.position + new Vector3((float)test.Samples[i * 2],(float)test.Samples[i * 2 + 1], (float)results[i]);
+                    }
                 }
+                
                 _pool[i].SetActive(true);
                 _pool[i].GetComponent<Renderer>().material = blueMat;
+
+                if (!isSimulation)
+                {
+                    _pool[j].SetActive(true);
+                    _pool[j].GetComponent<Renderer>().material = blueMat;
+                }
             }
             
         }

@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using UnityEditor;
 using UnityEngine;
+using Utils;
 
 [CustomEditor(typeof(Visualizers))]
 public class VisualizersEditor : Editor

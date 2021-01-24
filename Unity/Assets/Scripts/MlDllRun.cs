@@ -29,22 +29,22 @@ public class MlDllRun : MonoBehaviour
         {
             case TypeModel.Linear:
                 //Récupération des résultats via la dll
-                results = MlDllWrapper.TrainMlp(test.SampleCount, test.Samples, test.Outputs, 
+                results = MlDllWrapper.ExportResultMlp(test.SampleCount, test.Samples, test.Outputs, 
                     test.Infos.LayerCount, test.Infos.Dimensions, test.NodeCount, isClassification, epoch, alpha);
                 break;
             
             case TypeModel.MLP:
-                results = MlDllWrapper.TrainMlp(test.SampleCount, test.Samples, test.Outputs, 
+                results = MlDllWrapper.ExportResultMlp(test.SampleCount, test.Samples, test.Outputs, 
                     test.Infos.LayerCount, test.Infos.Dimensions, test.NodeCount, isClassification, epoch, alpha);
                 break;
             
             case TypeModel.RBF:
-                results = MlDllWrapper.TrainMlp(test.SampleCount, test.Samples, test.Outputs, 
+                results = MlDllWrapper.ExportResultMlp(test.SampleCount, test.Samples, test.Outputs, 
                     test.Infos.LayerCount, test.Infos.Dimensions, test.NodeCount, isClassification, epoch, alpha);
                 break;
             
             default:
-                results = MlDllWrapper.TrainMlp(test.SampleCount, test.Samples, test.Outputs, 
+                results = MlDllWrapper.ExportResultMlp(test.SampleCount, test.Samples, test.Outputs, 
                     test.Infos.LayerCount, test.Infos.Dimensions, test.NodeCount, isClassification, epoch, alpha);
                 break;
         }

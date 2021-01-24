@@ -162,7 +162,7 @@ CasTest::CasTest(TestType t)
 		break;
 
 	case MultiCross:
-		sample_count = 1000;
+		sample_count = 10;
 		samples = new double[sample_count * 2];
 
 		for (size_t i = 0; i < (sample_count * 2); i++)

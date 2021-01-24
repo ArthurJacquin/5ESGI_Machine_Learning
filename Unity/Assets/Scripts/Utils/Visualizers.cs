@@ -88,5 +88,16 @@ namespace Utils
         {
             return _pooledObj;
         }
+
+        public void HideVisualizers()
+        {
+            if (_pooledObj.Count <= 0)
+                return;
+
+            foreach (var obj in _pooledObj)
+            {
+                obj.transform.gameObject.SetActive(false);
+            }
+        }
     }
 }

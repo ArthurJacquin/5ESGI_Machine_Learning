@@ -49,6 +49,8 @@ namespace Utils
         {
             if (_instance == null && updateEditor)
                 _instance = this;
+            if(!visualize)
+                Visualizers.GetInstance().HideVisualizers();
         }
 
         private void ImportImages()
@@ -73,7 +75,7 @@ namespace Utils
                     path += "/DataSet_RnB/DataSet_4x4";
                     break;
                 case TypeImage.RnB16X16:
-                    path += "/DataSet_RnB/DataSet_4x4";
+                    path += "/DataSet_RnB/DataSet_16x16";
                     break;
                 default:
                     path += "/DataSet_Color/DataSet_4x4";

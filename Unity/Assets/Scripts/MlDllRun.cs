@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Runtime.InteropServices;
 using Save;
 using UnityEngine;
+using Utils;
 
 public class MlDllRun : MonoBehaviour
 {
@@ -75,11 +76,13 @@ public class MlDllRun : MonoBehaviour
             return;
         }
 
-        if (_pool.Count < results.Length)
+        if (_pool.Count < (results.Length * 2) + 2)
         {
             Debug.LogWarning("There isnt enough objects in pool");
             return;
         }
+        
+        Visualizers.GetInstance().HideVisualizers();
         
         var testSimulation = new TestClass(test.Type);
         
@@ -108,7 +111,38 @@ public class MlDllRun : MonoBehaviour
             }
             else //TODO : multi class
             {
-           
+                for (int i = 0; i < results.Length; i += 3)
+                {
+                    //résultats de la simulation
+                    _pool[i].transform.position = simulation.position + new Vector3((float)testSimulation.Samples[i * 2],(float)testSimulation.Samples[i * 2 + 1], 0.0f); 
+                    _pool[i].SetActive(true);
+
+                    if(testSimulation.Outputs[i] > 0.8f && testSimulation.Outputs[i + 1] < 0.8f && testSimulation.Outputs[i + 2] < 0.8f)
+                        _pool[i].GetComponent<Renderer>().material = blueMat;
+                    else if(testSimulation.Outputs[i] < 0.8f && testSimulation.Outputs[i + 1] > 0.8f && testSimulation.Outputs[i + 2] < 0.8f)
+                        _pool[i].GetComponent<Renderer>().material = redMat;
+                    else if(testSimulation.Outputs[i] < 0.8f && testSimulation.Outputs[i + 1] < 0.8f && testSimulation.Outputs[i + 2] > 0.8f)
+                        _pool[i].GetComponent<Renderer>().material = greenMat;
+                    else 
+                        _pool[i].GetComponent<Renderer>().material.color = Color.magenta;
+                    
+                    if (!isSimulation)
+                    {
+                        int j = i + results.Length + 1;
+                        //résultats du training
+                        _pool[j].transform.position = training.position + new Vector3((float)test.Samples[i * 2],(float)test.Samples[i * 2 + 1], 0.0f);
+                        _pool[j].SetActive(true);
+
+                        if(testSimulation.Outputs[i] > 0.8f && testSimulation.Outputs[i + 1] < 0.8f && testSimulation.Outputs[i + 2] < 0.8f)
+                            _pool[j].GetComponent<Renderer>().material = blueMat;
+                        else if(testSimulation.Outputs[i] < 0.8f && testSimulation.Outputs[i + 1] > 0.8f && testSimulation.Outputs[i + 2] < 0.8f)
+                            _pool[j].GetComponent<Renderer>().material = redMat;
+                        else if(testSimulation.Outputs[i] < 0.8f && testSimulation.Outputs[i + 1] < 0.8f && testSimulation.Outputs[i + 2] > 0.8f)
+                            _pool[j].GetComponent<Renderer>().material = greenMat;
+                        else 
+                            _pool[j].GetComponent<Renderer>().material.color = Color.magenta;
+                    }
+                }
             }
         }
         else

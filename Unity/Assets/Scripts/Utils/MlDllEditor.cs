@@ -41,6 +41,7 @@ namespace Utils
                 dllRun.RunMlDll(_modelType, _testType, _isClassification, _epoch, _alpha);
             }
             EditorGUILayout.EndHorizontal();
+            
             _loadPath = EditorGUILayout.TextField("Chemin du projet :", _loadPath);
             //loadPath =  FileBrowser.OpenSingleFile();
             

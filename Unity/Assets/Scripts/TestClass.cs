@@ -329,18 +329,42 @@ public class TestClass
                 break;
             
             case TypeTest.MultiCross:
-                //TODO : update needed
-                NbClass = 3;
-                SampleCount = 3;
-                Samples = new double[] {1.0f, 1.0f, 2.0f, 3.0f, 3.0f, 3.0f};
-                Outputs = new double[] {1, -1, -1};
-                
+                SampleCount = 1000;
+                Samples = new double[SampleCount * 2];
+
+                for (int i = 0; i < (SampleCount * 2); ++i)
+                {
+                    Samples[i] = Random.Range(0.0f, 1.0f) * 2.0f - 1.0f;
+                }
+
+                Outputs = new double[SampleCount * 3];
+                for (int i = 0; i < SampleCount; ++i)
+                {
+                    if (Mathf.Abs((float)Samples[i * 2] % 0.5f) <= 0.25 && Mathf.Abs((float)Samples[i * 2 + 1] % 0.5f) > 0.25)
+                    {
+                        Outputs[i * 3] = 1.0;
+                        Outputs[i * 3 + 1] = 0.0;
+                        Outputs[i * 3 + 2] = 0.0;
+                    }
+                    else if (Mathf.Abs((float)Samples[i * 2] % 0.5f) > 0.25 && Mathf.Abs((float)Samples[i * 2 + 1] % 0.5f) <= 0.25)
+                    {
+                        Outputs[i * 3] = 0.0;
+                        Outputs[i * 3 + 1] = 1.0;
+                        Outputs[i * 3 + 2] = 0.0;
+                    }
+                    else
+                    {
+                        Outputs[i * 3] = 0.0;
+                        Outputs[i * 3 + 1] = 0.0;
+                        Outputs[i * 3 + 2] = 1.0;
+                    }
+                }
+
                 Infos = new TestInfos()
                 {
-                    //TODO : update needed
-                    LayerCount = 2,
-                    OutputSize = 3,
-                    DimensionsMLP = new int[] {2, 1}
+                    LayerCount = 3,
+                    OutputSize = 1000,
+                    DimensionsMLP = new int[] {2, 3, 3, 3}
                 };
                 break;
             

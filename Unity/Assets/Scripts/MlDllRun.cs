@@ -188,28 +188,29 @@ public class MlDllRun : MonoBehaviour
         
         if (isClassification)
         {
-            for (int i = 0; i < results.Length; i++)
+            for (int i = 0; i < test.SampleCount; i++)
             {
                 //résultats de la simulation
-                _pool[i].transform.position = simulation.position + new Vector3((float)testSimulation.Samples[i * 2],(float)testSimulation.Samples[i * 2 + 1], 0.0f); 
+                _pool[i].transform.position = simulation.position + new Vector3((float)testSimulation.Samples[i * 2],(float)testSimulation.Samples[i * 2 + 1], 0.0f);
                 _pool[i].SetActive(true);
 
                 if (testSimulation.NbClass < 3)
                 {
-                    if(Math.Abs(testSimulation.Outputs[i * testSimulation.NbClass] - 1) < Mathf.Epsilon)
+                    //testSimulation.Outputs = { 0, 1, 1, 0} ;
+                    if((int)testSimulation.Outputs[i * testSimulation.NbClass] == 1)
                         _pool[i].GetComponent<Renderer>().material = blueMat;
-                    else if(Math.Abs(testSimulation.Outputs[i * testSimulation.NbClass + 1] - 1) < Mathf.Epsilon)
+                    else if((int)testSimulation.Outputs[i * testSimulation.NbClass + 1] == 1)
                         _pool[i].GetComponent<Renderer>().material = redMat;
                     else 
                         _pool[i].GetComponent<Renderer>().material.color = Color.magenta;
                 }
                 else
                 {
-                    if(Math.Abs(testSimulation.Outputs[i * testSimulation.NbClass] - 1) < Mathf.Epsilon)
+                    if((int)testSimulation.Outputs[i * testSimulation.NbClass] == 1)
                         _pool[i].GetComponent<Renderer>().material = blueMat;
-                    else if(Math.Abs(testSimulation.Outputs[i * testSimulation.NbClass + 1] - 1) < Mathf.Epsilon)
+                    else if((int)testSimulation.Outputs[i * testSimulation.NbClass + 1] == 1)
                         _pool[i].GetComponent<Renderer>().material = redMat;
-                    else if(Math.Abs(testSimulation.Outputs[i * testSimulation.NbClass + 2] - 1) < Mathf.Epsilon)
+                    else if((int)testSimulation.Outputs[i * testSimulation.NbClass + 2] == 1)
                         _pool[i].GetComponent<Renderer>().material = greenMat;
                     else
                         _pool[i].GetComponent<Renderer>().material.color = Color.magenta;
@@ -224,20 +225,21 @@ public class MlDllRun : MonoBehaviour
 
                     if (test.NbClass < 3)
                     {
-                        if(Math.Abs(test.Outputs[i * test.NbClass] - 1) < Mathf.Epsilon)
+                        //testSimulation.Outputs = { 0, 1, 1, 0} ;
+                        if((int)test.Outputs[i * test.NbClass] == 1)
                             _pool[j].GetComponent<Renderer>().material = blueMat;
-                        else if(Math.Abs(test.Outputs[i * test.NbClass + 1] - 1) < Mathf.Epsilon)
+                        else if((int)test.Outputs[i * test.NbClass + 1] == 1)
                             _pool[j].GetComponent<Renderer>().material = redMat;
                         else 
                             _pool[j].GetComponent<Renderer>().material.color = Color.magenta;
                     }
                     else
                     {
-                        if(Math.Abs(test.Outputs[i * test.NbClass] - 1) < Mathf.Epsilon)
+                        if((int)test.Outputs[i * test.NbClass] == 1)
                             _pool[j].GetComponent<Renderer>().material = blueMat;
-                        else if(Math.Abs(test.Outputs[i * test.NbClass + 1] - 1) < Mathf.Epsilon)
+                        else if((int)test.Outputs[i * test.NbClass + 1] == 1)
                             _pool[j].GetComponent<Renderer>().material = redMat;
-                        else if(Math.Abs(test.Outputs[i * test.NbClass + 2] - 1) < Mathf.Epsilon)
+                        else if((int)test.Outputs[i * test.NbClass + 2] == 1)
                             _pool[j].GetComponent<Renderer>().material = greenMat;
                         else
                             _pool[j].GetComponent<Renderer>().material.color = Color.magenta;

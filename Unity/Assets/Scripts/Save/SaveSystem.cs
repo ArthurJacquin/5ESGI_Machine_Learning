@@ -22,9 +22,9 @@ namespace Save
          Debug.Log("Model saved at : " + path);
       }
 
-      public static ModelData LoadModel(string path)
+      public static ModelData LoadModel()
       {
-         path = path + "/model.fun";
+         string path = Application.dataPath + "/model.fun";
          if (File.Exists(path))
          {
             BinaryFormatter formatter = new BinaryFormatter();

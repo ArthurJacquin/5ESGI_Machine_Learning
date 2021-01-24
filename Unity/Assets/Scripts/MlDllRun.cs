@@ -16,7 +16,7 @@ public class MlDllRun : MonoBehaviour
     [SerializeField] private Transform simulation;
     [SerializeField] private Transform training;
     
-    public void RunMlDll(TypeModel modelType, TypeTest type, bool imageTest, TypeImage image, bool isClassification, int epoch, double alpha, double gamma, bool needTrain)
+    public double[] RunMlDll(TypeModel modelType, TypeTest type, bool imageTest, TypeImage image, bool isClassification, int epoch, double alpha, double gamma, bool needTrain)
     {
         //Initialisation des infos du test en fonction de son type
         TestClass test;
@@ -27,7 +27,7 @@ public class MlDllRun : MonoBehaviour
             if (img.Count <= 0)
             {
                 Debug.LogWarning("No images found. Try to import them first");
-                return;
+                return new double[0];
             }
             
             test = new TestClass(img, type);
@@ -163,6 +163,8 @@ public class MlDllRun : MonoBehaviour
         //Nettoyage !
         MlDllWrapper.DeleteModel(model);
         //MlDllWrapper.DeleteModel(res);
+
+        return results;
     }
 
     public void Simulate(TypeModel model, TypeTest type, bool isClassification)

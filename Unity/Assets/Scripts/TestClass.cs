@@ -232,7 +232,7 @@ public class TestClass
                 {
                     LayerCount = 3,
                     OutputSize = 3,
-                    DimensionsMLP = new int[] {2, 3, 2 },
+                    DimensionsMLP = new int[] { 2, 3, 2 },
                     DimensionsRBF = new int[] { 3, 2 }
                 };
                 break;
@@ -269,8 +269,8 @@ public class TestClass
                 {
                     OutputSize = 100,
                     LayerCount = 3,
-                    DimensionsMLP = new int[] {2, 3, 2},
-                    DimensionsRBF = new int[] { 100, 2 }
+                    DimensionsMLP = new int[] { 2, 3, 2},
+                    DimensionsRBF = new int[] { 10, 2 }
                 };
                 break;
             

@@ -50,7 +50,6 @@ public class MlDllRun : MonoBehaviour
 
                 if (needTrain)
                 {
-                    //TODO : c'est censé me retourner un double* ça
                     MlDllWrapper.TrainModelLinear(model, test.Samples, test.SampleCount, test.Datasize,
                         test.Outputs, test.NbClass, epoch, alpha, isClassification);
                 }
@@ -85,9 +84,6 @@ public class MlDllRun : MonoBehaviour
                                                 test.Infos.LayerCount, isClassification, epoch, alpha);
                 }
 
-                //double[] w = new double[test.Infos.DimensionsRBF[0] * test.Infos.DimensionsRBF[1] + test.Infos.DimensionsRBF[0] * test.Datasize];
-                //Marshal.Copy(model, w, 0, test.Infos.DimensionsRBF[0] * test.Infos.DimensionsRBF[1] + test.Infos.DimensionsRBF[0] * test.Datasize);
-
                 //Récupération des résultats
                 for (int i = 0; i < test.SampleCount; i++)
                 {
@@ -112,12 +108,9 @@ public class MlDllRun : MonoBehaviour
 
                 if (needTrain)
                 {
-                    MlDllWrapper.TrainModelRBF(model, test.Infos.DimensionsRBF, test.Samples, test.SampleCount,
-                                                test.InputCount, test.Datasize, test.Outputs, epoch, gamma);
+                    MlDllWrapper.TrainModelRBF(model, test.Infos.DimensionsRBF, test.Samples, test.SampleCount, test.InputCount,
+                                                test.Datasize, test.Outputs, epoch, gamma);
                 }
-
-                //double[] w = new double[test.Infos.DimensionsRBF[0] * test.Infos.DimensionsRBF[1] + test.Infos.DimensionsRBF[0] * test.Datasize];
-                //Marshal.Copy(model, w, 0, test.Infos.DimensionsRBF[0] * test.Infos.DimensionsRBF[1] + test.Infos.DimensionsRBF[0] * test.Datasize);
 
                 //Récupération des résultats
                 for (int i = 0; i < test.SampleCount; i++)
@@ -129,8 +122,7 @@ public class MlDllRun : MonoBehaviour
                         sample[j] = test.Samples[id];
                     }
 
-                    res = MlDllWrapper.PredictModelRBF(model, test.Infos.DimensionsRBF, sample, test.InputCount,
-                                                        test.Datasize, isClassification, gamma);
+                    res = MlDllWrapper.PredictModelRBF(model, test.Infos.DimensionsRBF, sample, test.InputCount, test.Datasize, isClassification, gamma);
 
                     Marshal.Copy(res, managedResults, 0, 1);
 
@@ -239,7 +231,7 @@ public class MlDllRun : MonoBehaviour
                         _pool[j].transform.position = training.position + new Vector3((float)test.Samples[i * 2],(float)test.Samples[i * 2 + 1], 0.0f);
                         _pool[j].SetActive(true);
 
-                        if(test.Outputs[i] == 0)
+                        if(test.Outputs[i] < Mathf.Epsilon && test.Outputs[i] > -Mathf.Epsilon)
                             _pool[j].GetComponent<Renderer>().material = blueMat;
                         else if(Math.Abs(test.Outputs[i] - 1) < 0.1f)
                             _pool[j].GetComponent<Renderer>().material = redMat;

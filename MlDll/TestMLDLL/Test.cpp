@@ -162,8 +162,9 @@ CasTest::CasTest(TestType t)
 		break;
 
 	case MultiCross:
-		/*sample_count = 1000;
+		sample_count = 1000;
 		samples = new double[sample_count * 2];
+
 		for (size_t i = 0; i < (sample_count * 2); i++)
 		{
 			samples[i] = rand() / (double)RAND_MAX * 2.0 - 1.0;
@@ -172,13 +173,13 @@ CasTest::CasTest(TestType t)
 		outputs = new double[sample_count];
 		for (size_t i = 0; i < sample_count; i++)
 		{
-			if (abs(samples[i * 2] % 0.5) <= 0.25 && abs(samples[i * 2 + 1] % 0.5) > 0.25)
+			if (std::abs(std::fmod(samples[i * 2], 0.5)) <= 0.25 && std::abs(std::fmod(samples[i * 2 + 1], 0.5)) > 0.25)
 			{
 				outputs[i] = 1.0;
 				outputs[i + 1] = 0.0;
 				outputs[i + 2] = 0.0;
 			}
-			else if (abs(samples[i * 2] % 0.5) > 0.25 && abs(samples[i * 2 + 1] % 0.5) <= 0.25)
+			else if (std::abs(std::fmod(samples[i * 2], 0.5)) > 0.25 && std::abs(std::fmod(samples[i * 2 + 1], 0.5)) <= 0.25)
 			{
 				outputs[i] = 0.0;
 				outputs[i + 1] = 1.0;
@@ -190,7 +191,7 @@ CasTest::CasTest(TestType t)
 				outputs[i + 1] = 0.0;
 				outputs[i + 2] = 1.0;
 			}
-		}*/
+		}
 		break;
 
 	case LinearSimple2D:

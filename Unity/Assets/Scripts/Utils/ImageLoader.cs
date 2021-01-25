@@ -1,6 +1,6 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using System.IO;
+using System.Linq;
 using UnityEngine;
 
 namespace Utils
@@ -25,16 +25,18 @@ namespace Utils
         public TypeImage type;
         public bool loadAllImages;
         public int nbImagesToLoad;
+        public bool loadRandomImages;
 
         private static ImageLoader _instance;
-        private List<List<float>> _images;
+        public static List<List<float>> images;
+        public static List<int> images3DOrReal; // Si la valeur est à 0 => 3D, si la valeur est à 1 => Real
         private void Awake()
         {
             Debug.Log("Awake");
 
             if (_instance == null)
                 _instance = this;
-            if (_images == null)
+            if (images == null)
                 InitializeImages();
 
             updateEditor = false;
@@ -42,7 +44,11 @@ namespace Utils
     
         public static ImageLoader GetInstance()
         {
-            return _instance;
+            if(_instance)
+                return _instance;
+            
+            Debug.LogWarning("No instances of ImageLoader found !!! ");
+            return null;
         }
     
         private void Update()
@@ -60,7 +66,7 @@ namespace Utils
 
             string path = projectFolderPath;
             
-            /*switch (type)
+            switch (type)
             {
                 case TypeImage.Color4X4:
                     path += "/DataSet_Color/DataSet_4x4";
@@ -86,24 +92,29 @@ namespace Utils
             Debug.Log("Path for real images dataset : " + pathReal);
             string path3D = projectFolderPath != "" ? path + "/DataSet_3D" : "C:/ESGI/5A_Projets/5ESGI_Machine_Learning/DataSet_Color/DataSet_4x4/DataSet_3D";
             Debug.Log("Path for 3D images dataset : " + path3D);
-            */
-            string[] files = System.IO.Directory.GetFiles(path, "*.jpg");
-            //string[] files3D = System.IO.Directory.GetFiles(path3D, "*.jpg");
+            
+            string[] files = System.IO.Directory.GetFiles(pathReal, "*.jpg");
+            string[] files3D = System.IO.Directory.GetFiles(path3D, "*.jpg");
 
             List<List<float>> imagesReal = LoadImagesFromPath(files);
-            //List<List<float>> images3D = LoadImagesFromPath(files3D);
+            List<List<float>> images3D = LoadImagesFromPath(files3D);
 
-            foreach (var image in imagesReal)
+            List<int> valuesReal = Enumerable.Repeat(1, imagesReal.Count).ToList();
+            List<int> values3D = Enumerable.Repeat(0, images3D.Count).ToList();
+            
+            for (var i = 0; i < imagesReal.Count; i++)
             {
-                _images.Add(image);
+                images.Add(imagesReal[i]);
+                images3DOrReal.Add(valuesReal[i]);
             }
 
-            //foreach (var image in images3D)
-            //{
-            //    _images.Add(image);
-            //}
-        
-            Debug.Log("Found images : " + _images.Count);
+            for (var i = 0; i < images3D.Count; i++)
+            {
+                images.Add(images3D[i]);
+                images3DOrReal.Add(values3D[i]);
+            }
+
+            Debug.Log("Found images : " + images.Count);
         }
 
         private List<List<float>> LoadImagesFromPath(string[] filepath)
@@ -135,9 +146,27 @@ namespace Utils
                 }
                 else
                 {
+                    List<int> usedIndexes = new List<int>();
                     for(int i = 0; i < nbImagesToLoad; ++i)
                     {
-                        string path = filepath[i];
+                        string path;
+                        if(loadRandomImages)
+                        {
+                            int id = 0;
+                            do
+                            {
+                                id = UnityEngine.Random.Range(0, filepath.Length);
+                                path = filepath[id];
+                            } 
+                            while (usedIndexes.Contains(id));
+
+                            usedIndexes.Add(id);
+                        }
+                        else
+                        {
+                            path = filepath[i];
+                        }
+                        Debug.Log(path);
                         fileData = File.ReadAllBytes(path);
                         Texture2D tmp = new Texture2D(500, 500, TextureFormat.DXT1, false);
                         tmp.LoadImage(fileData);
@@ -160,39 +189,57 @@ namespace Utils
             List<float> pixels = new List<float>();
 
             Color[] pixs = tex.GetPixels();
-       
-            foreach (var pixel in pixs)
-            { 
-                pixels.Add(pixel.r);    
-                pixels.Add(pixel.g);    
-                pixels.Add(pixel.b);    
+
+            if (type == TypeImage.Color || type == TypeImage.Color4X4 || type == TypeImage.Color16X16)
+            {
+                foreach (var pixel in pixs)
+                { 
+                    pixels.Add(pixel.r);    
+                    pixels.Add(pixel.g);    
+                    pixels.Add(pixel.b);    
+                }
             }
-        
+            else
+            {
+                foreach (var pixel in pixs)
+                { 
+                    pixels.Add(pixel.r);  
+                }
+            }
+            
             return pixels;
         }
 
         public void InitializeImages()
         {
             ClearImages();
-            _images = new List<List<float>>();
+            images = new List<List<float>>();
+            images3DOrReal = new List<int>();
         
             ImportImages();
         }
 
         public void ClearImages()
         {
-            if(_images != null)
-                _images.Clear();
+            if(images != null)
+                images.Clear();
+            if (images3DOrReal != null)
+                images3DOrReal.Clear();
         }
 
-        public List<List<float>> GetAllImages()
+        public static List<List<float>> GetAllImages()
         {
-            return _instance._images;
+            return images;
         }
 
-        public List<float> GetImageByIndex(int index)
+        public static List<int> GetAllValues3dOrReal()
         {
-            return _instance._images[index];
+            return images3DOrReal;
+        }
+
+        public static List<float> GetImageByIndex(int index)
+        {
+            return images[index];
         }
     }
 }

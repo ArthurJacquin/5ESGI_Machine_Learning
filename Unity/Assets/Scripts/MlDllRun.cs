@@ -9,6 +9,7 @@ using Utils;
 public class MlDllRun : MonoBehaviour
 {
     private List<GameObject> _pool;
+    public Model myModel;
     [SerializeField] private Material greenMat;
     [SerializeField] private Material redMat;
     [SerializeField] private Material blueMat;
@@ -16,21 +17,22 @@ public class MlDllRun : MonoBehaviour
     [SerializeField] private Transform simulation;
     [SerializeField] private Transform training;
     
-    public void RunMlDll(TypeModel modelType, TypeTest type, bool imageTest, TypeImage image, bool isClassification, int epoch, double alpha, double gamma, bool needTrain)
+    
+    public void RunMlDll(TypeModel modelType, TypeTest type, bool isTestingImage, TypeImage image, bool isClassification, int epoch, double alpha, double gamma, bool needTrain)
     {
         //Initialisation des infos du test en fonction de son type
         TestClass test;
-        if (imageTest)
+        if (isTestingImage)
         {
-            List<float> img = ImageLoader.GetInstance().GetImageByIndex(0);
+            List<List<float>> allImages = ImageLoader.GetAllImages();
+            List<int> allValues = ImageLoader.GetAllValues3dOrReal();
 
-            if (img.Count <= 0)
+            if (allImages.Count <= 0)
             {
-                Debug.LogWarning("No images found. Try to import them first");
                 return;
             }
             
-            test = new TestClass(img, type);
+            test = new TestClass(allImages, allValues, image);
         }
         else
         {
@@ -50,7 +52,6 @@ public class MlDllRun : MonoBehaviour
 
                 if (needTrain)
                 {
-                    //TODO : c'est censé me retourner un double* ça
                     MlDllWrapper.TrainModelLinear(model, test.Samples, test.SampleCount, test.Datasize,
                         test.Outputs, test.NbClass, epoch, alpha, isClassification);
                 }
@@ -82,11 +83,8 @@ public class MlDllRun : MonoBehaviour
                 if (needTrain)
                 {
                     MlDllWrapper.TrainModelMLP(model, test.Samples, test.SampleCount, test.Outputs, test.Infos.DimensionsMLP,  
-                                                test.Infos.LayerCount, isClassification, epoch, alpha);
+                        test.Infos.LayerCount, isClassification, epoch, alpha);
                 }
-
-                //double[] w = new double[test.Infos.DimensionsRBF[0] * test.Infos.DimensionsRBF[1] + test.Infos.DimensionsRBF[0] * test.Datasize];
-                //Marshal.Copy(model, w, 0, test.Infos.DimensionsRBF[0] * test.Infos.DimensionsRBF[1] + test.Infos.DimensionsRBF[0] * test.Datasize);
 
                 //Récupération des résultats
                 for (int i = 0; i < test.SampleCount; i++)
@@ -112,12 +110,9 @@ public class MlDllRun : MonoBehaviour
 
                 if (needTrain)
                 {
-                    MlDllWrapper.TrainModelRBF(model, test.Infos.DimensionsRBF, test.Samples, test.SampleCount,
-                                                test.InputCount, test.Datasize, test.Outputs, epoch, gamma);
+                    MlDllWrapper.TrainModelRBF(model, test.Infos.DimensionsRBF, test.Samples, test.SampleCount, test.InputCount,
+                                                test.Datasize, test.Outputs, epoch, gamma);
                 }
-
-                //double[] w = new double[test.Infos.DimensionsRBF[0] * test.Infos.DimensionsRBF[1] + test.Infos.DimensionsRBF[0] * test.Datasize];
-                //Marshal.Copy(model, w, 0, test.Infos.DimensionsRBF[0] * test.Infos.DimensionsRBF[1] + test.Infos.DimensionsRBF[0] * test.Datasize);
 
                 //Récupération des résultats
                 for (int i = 0; i < test.SampleCount; i++)
@@ -129,8 +124,7 @@ public class MlDllRun : MonoBehaviour
                         sample[j] = test.Samples[id];
                     }
 
-                    res = MlDllWrapper.PredictModelRBF(model, test.Infos.DimensionsRBF, sample, test.InputCount,
-                                                        test.Datasize, isClassification, gamma);
+                    res = MlDllWrapper.PredictModelRBF(model, test.Infos.DimensionsRBF, sample, test.InputCount, test.Datasize, isClassification, gamma);
 
                     Marshal.Copy(res, managedResults, 0, 1);
 
@@ -158,21 +152,26 @@ public class MlDllRun : MonoBehaviour
 
         //test.Outputs = managedResults;
         //Affichage des résultats dans la scène principale
-        UpdateVisualResults(test, results, isClassification, false);
+        UpdateVisualResults(test, results, isClassification, false, isTestingImage);
         
         //Nettoyage !
         MlDllWrapper.DeleteModel(model);
         //MlDllWrapper.DeleteModel(res);
+
+        myModel.type = modelType;
+        myModel.results = results;
     }
 
-    public void Simulate(TypeModel model, TypeTest type, bool isClassification)
+    public void Simulate(TypeModel model, TypeTest type, bool isClassification, bool isTestingImage)
     {
         var test = new TestClass(type);
-        UpdateVisualResults(test, test.Outputs, isClassification, true);
+        UpdateVisualResults(test, test.Outputs, isClassification, true, isTestingImage);
     }
 
-    private void UpdateVisualResults(TestClass test, double[] results, bool isClassification, bool isSimulation)
+    private void UpdateVisualResults(TestClass test, double[] results, bool isClassification, bool isSimulation, bool isTestingImage)
     {
+        if (isTestingImage) return;
+        
         Pooler.GetInstance().InitializePool();
         _pool = new List<GameObject>(Pooler.GetInstance().GetPoolList());
 
@@ -194,61 +193,64 @@ public class MlDllRun : MonoBehaviour
         
         if (isClassification)
         {
-            if (test.Infos.DimensionsMLP[test.Infos.LayerCount - 1] == 1)
+            for (int i = 0; i < test.SampleCount; i++)
             {
-                for (int i = 0; i < results.Length; ++i)
+                //résultats de la simulation
+                _pool[i].transform.position = simulation.position + new Vector3((float)testSimulation.Samples[i * 2],(float)testSimulation.Samples[i * 2 + 1], 0.0f);
+                _pool[i].SetActive(true);
+
+                if (testSimulation.NbClass < 3)
                 {
-                    //résultats de la simulation
-                    _pool[i].transform.position = simulation.position + new Vector3((float)testSimulation.Samples[i * 2],(float)testSimulation.Samples[i * 2 + 1], 0.0f); 
-                    _pool[i].SetActive(true);
-
-                    _pool[i].GetComponent<Renderer>().material = testSimulation.Outputs[i] > 0 ? redMat : blueMat;
-                    
-                    if (!isSimulation)
-                    {
-                        int j = i + results.Length + 1;
-                        //résultats du training
-                        _pool[j].transform.position = training.position + new Vector3((float)test.Samples[i * 2],(float)test.Samples[i * 2 + 1], 0.0f);
-                        _pool[j].SetActive(true);
-
-                        _pool[j].GetComponent<Renderer>().material = results[i] > 0 ? redMat : blueMat;
-                    }
-                }
-            }
-            else //TODO : multiclass à tester
-            {
-                for (int i = 0; i < results.Length; i++)
-                {
-                    //résultats de la simulation
-                    _pool[i].transform.position = simulation.position + new Vector3((float)testSimulation.Samples[i * 2],(float)testSimulation.Samples[i * 2 + 1], 0.0f); 
-                    _pool[i].SetActive(true);
-
-                    if(testSimulation.Outputs[i] == 0)
+                    //testSimulation.Outputs = { 0, 1, 1, 0} ;
+                    if((int)testSimulation.Outputs[i * testSimulation.NbClass] == 1)
                         _pool[i].GetComponent<Renderer>().material = blueMat;
-                    else if(Math.Abs(testSimulation.Outputs[i] - 1) < 0.01f)
+                    else if((int)testSimulation.Outputs[i * testSimulation.NbClass + 1] == 1)
                         _pool[i].GetComponent<Renderer>().material = redMat;
-                    else if(Math.Abs(testSimulation.Outputs[i] - 2) < 0.01f)
-                        _pool[i].GetComponent<Renderer>().material = greenMat;
                     else 
                         _pool[i].GetComponent<Renderer>().material.color = Color.magenta;
-                    
-                    if (!isSimulation)
-                    {
-                        int j = i + results.Length + 1;
-                        //résultats du training
-                        _pool[j].transform.position = training.position + new Vector3((float)test.Samples[i * 2],(float)test.Samples[i * 2 + 1], 0.0f);
-                        _pool[j].SetActive(true);
+                }
+                else
+                {
+                    if((int)testSimulation.Outputs[i * testSimulation.NbClass] == 1)
+                        _pool[i].GetComponent<Renderer>().material = blueMat;
+                    else if((int)testSimulation.Outputs[i * testSimulation.NbClass + 1] == 1)
+                        _pool[i].GetComponent<Renderer>().material = redMat;
+                    else if((int)testSimulation.Outputs[i * testSimulation.NbClass + 2] == 1)
+                        _pool[i].GetComponent<Renderer>().material = greenMat;
+                    else
+                        _pool[i].GetComponent<Renderer>().material.color = Color.magenta;
+                }
 
-                        if(test.Outputs[i] == 0)
+                if (!isSimulation)
+                {
+                    int j = i + results.Length + 1;
+                    //résultats du training
+                    _pool[j].transform.position = training.position + new Vector3((float)test.Samples[i * 2],(float)test.Samples[i * 2 + 1], 0.0f);
+                    _pool[j].SetActive(true);
+
+                    if (test.NbClass < 3)
+                    {
+                        //testSimulation.Outputs = { 0, 1, 1, 0} ;
+                        if((int)test.Outputs[i * test.NbClass] == 1)
                             _pool[j].GetComponent<Renderer>().material = blueMat;
-                        else if(Math.Abs(test.Outputs[i] - 1) < 0.1f)
+                        else if((int)test.Outputs[i * test.NbClass + 1] == 1)
                             _pool[j].GetComponent<Renderer>().material = redMat;
-                        else if(Math.Abs(test.Outputs[i] - 2) < 0.1f)
-                            _pool[j].GetComponent<Renderer>().material = greenMat;
                         else 
                             _pool[j].GetComponent<Renderer>().material.color = Color.magenta;
                     }
+                    else
+                    {
+                        if((int)test.Outputs[i * test.NbClass] == 1)
+                            _pool[j].GetComponent<Renderer>().material = blueMat;
+                        else if((int)test.Outputs[i * test.NbClass + 1] == 1)
+                            _pool[j].GetComponent<Renderer>().material = redMat;
+                        else if((int)test.Outputs[i * test.NbClass + 2] == 1)
+                            _pool[j].GetComponent<Renderer>().material = greenMat;
+                        else
+                            _pool[j].GetComponent<Renderer>().material.color = Color.magenta;
+                    }
                 }
+                
             }
         }
         else

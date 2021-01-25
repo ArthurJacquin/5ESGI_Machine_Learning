@@ -1,5 +1,6 @@
 ﻿using System.IO;
 using System.Runtime.Serialization.Formatters.Binary;
+using Crosstales.FB;
 using UnityEngine;
 
 namespace Save
@@ -8,7 +9,7 @@ namespace Save
    {
       public static void SaveModel(Model model, string name)
       {
-         string path = Application.dataPath + "/Saves/model_" + name;
+         string path = Application.dataPath + "/Saves/model_" + name + ".fun";
          //TODO : créer une nouvelle sauvegarde pour pas écraser l'ancienne si existante
       
          BinaryFormatter formatter = new BinaryFormatter();
@@ -22,9 +23,9 @@ namespace Save
          Debug.Log("Model saved at : " + path);
       }
 
-      public static ModelData LoadModel(string path)
+      public static ModelData LoadModel()
       {
-         path = path + "/model.fun";
+         string path = FileBrowser.OpenSingleFile();
          if (File.Exists(path))
          {
             BinaryFormatter formatter = new BinaryFormatter();

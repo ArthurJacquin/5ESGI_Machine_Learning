@@ -1,4 +1,5 @@
-﻿using UnityEngine;
+﻿using System;
+using UnityEngine;
 using Utils;
 
 namespace Save
@@ -12,7 +13,7 @@ namespace Save
 
    public class Model : MonoBehaviour
    {
-      public double[] results;
+      public IntPtr results;
       public TypeModel type;
       public TypeImage imageType;
    }

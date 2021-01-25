@@ -6,7 +6,7 @@ namespace Save
     [Serializable]
     public class ModelData
     {
-        public double[] results;
+        public IntPtr results;
         public TypeModel type;
         public TypeImage imageType;
         public ModelData(Model model)

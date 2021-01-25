@@ -24,7 +24,7 @@ public class MlDllRun : MonoBehaviour
     public void PredictOneImage(TypeModel type, TypeImage imageType, double gamma, int nbCenter)
     {
         TestClass test = new TestClass(ImageLoader.GetImageByIndex(0), imageType, nbCenter, dimensionsMLP);
-        IntPtr model = MlDllWrapper.ParseToPointer(myModel.results, myModel.results.Length);
+        IntPtr model = myModel.results;
         IntPtr res = new IntPtr();
         double[] managedResults = new double[1] {-1};
         
@@ -224,13 +224,14 @@ public class MlDllRun : MonoBehaviour
                 break;
         }
 
+        //Stockage du modèle actuel
+        myModel.type = modelType;
+        myModel.results = model;
+        myModel.imageType = image;
+        
         //Nettoyage !
         MlDllWrapper.DeleteModel(model);
         MlDllWrapper.DeleteModel(res);
-
-        myModel.type = modelType;
-        myModel.results = results;
-        myModel.imageType = image;
         
         //Affichage des résultats dans la scène principale
         if (isTestingImage)

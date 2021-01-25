@@ -79,11 +79,6 @@ namespace Utils
             GUILayout.FlexibleSpace();
             if (GUILayout.Button("Save Model", GUILayout.Width(135), GUILayout.Height(30)))
             {
-                if (dllRun.myModel.results.Length <= 0)
-                {
-                    Debug.LogWarning("Trying to save an empty model");
-                    return;
-                }
                 SaveSystem.SaveModel(dllRun.myModel, _saveName);
             }
         

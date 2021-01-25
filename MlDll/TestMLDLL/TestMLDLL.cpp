@@ -38,7 +38,7 @@ int main()
     bool isClassification = true;
 
     //-------------------------------------Linear-----------------------------------------
-#if 1
+#if 0
     //Creation du model
     int epoch = 1000;
     int input_count = 16;
@@ -132,11 +132,11 @@ int main()
 #endif
 
     //-------------------------------------RBF-----------------------------------------
-#if 0
+#if 1
     int epoch = 100;
-    int* dims = new int[2] { 150, 2 };
-    int inputSize = 1;
-    float gamma = 0.1; //VALEUR MISE AU PIF
+    int* dims = new int[2] { 10, 2 };
+    int inputSize = 16;
+    float gamma = 0.1;
 
     double* model = create_RBF_model(dims, test.datasize);
 

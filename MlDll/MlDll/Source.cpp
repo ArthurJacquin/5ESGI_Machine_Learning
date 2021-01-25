@@ -564,7 +564,8 @@ extern "C" {
 			center[j] = 0.0;
 		}
 
-		for (size_t i = 0; i < inputSize; i += dataSize)
+		//Somme de tout les inputs
+		for (size_t i = 0; i < inputSize; i++)
 		{
 			for (size_t j = 0; j < dataSize; j++)
 			{
@@ -621,10 +622,10 @@ extern "C" {
 	{
 		std::vector<double*> centers;
 
-		//initialisation random des centers
+		//initialisation des centers
 		for (size_t i = 0; i < K; i++)
 		{
-			centers.push_back(calculateCenter(samples[i], inputSize, dataSize));
+			centers.push_back(calculateCenter(samples[i % sampleSize], inputSize, dataSize));
 			//centers.push_back(calculateCenter(samples[rand() % (sampleSize)], inputSize, dataSize));
 		}
 
@@ -639,7 +640,7 @@ extern "C" {
 			dataSumPerCenter[i] = new double[dataSize];
 			for (size_t j = 0; j < dataSize; ++j)
 			{
-				dataSumPerCenter[i][j] = 0.0;
+				dataSumPerCenter[i][j] = 0;
 			}
 
 			datasPerCenter[i] = 0;
@@ -680,7 +681,7 @@ extern "C" {
 		{
 			for (size_t j = 0; j < dataSize; j++)
 			{
-				centers[i][j] = dataSumPerCenter[i][j] / datasPerCenter[i];
+				centers[i][j] = dataSumPerCenter[i][j] / (datasPerCenter[i] + DBL_MIN);
 			}
 		}
 
@@ -690,7 +691,7 @@ extern "C" {
 	/// <summary>
 	/// Calcule les points en fonctions des centres précalculés et des outputs souhaités
 	/// </summary>
-	void calculateWeight(double*& model, int K, int sampleSize, std::vector<double*> lloydCenters, std::vector<double*>& samples, int inputSize, int dataSize, double gamma, double* output, int outputCount)
+	void calculateWeight(double* model, int K, int sampleSize, std::vector<double*> lloydCenters, std::vector<double*>& samples, int inputSize, int dataSize, double gamma, double* output, int outputCount)
 	{
 		MatrixXd X(sampleSize, K);
 
@@ -775,7 +776,7 @@ extern "C" {
 		{
 			calculateWeight(model, K, sampleSize, lloydCenters, data, inputSize, dataSize, gamma, output, outputCount);
 		}
-		//printArray(model, K, outputCount, "Weights");
+		printArray(model, K, outputCount, "Weights");
 
 		//concatene les centres dans model
 		for (size_t i = 0; i < K; i++)

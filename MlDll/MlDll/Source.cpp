@@ -846,4 +846,16 @@ extern "C" {
 	}
 
 #pragma endregion
+
+	//--------------DEBUG--------------
+	__declspec(dllexport) double* parseToPointer(double result[], int resultSize)
+	{
+		double* pointerResult = new double[resultSize];
+		for (size_t i = 0; i < resultSize; i++)
+		{
+			pointerResult[i] = result[i];
+		}
+
+		return pointerResult;
+	}
 }

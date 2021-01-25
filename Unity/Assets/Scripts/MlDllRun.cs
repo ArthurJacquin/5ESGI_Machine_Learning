@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Runtime.InteropServices;
 using Save;
+using TMPro;
 using UnityEditor;
 using UnityEngine;
 using Utils;
@@ -16,7 +17,7 @@ public class MlDllRun : MonoBehaviour
 
     [SerializeField] private Transform simulation;
     [SerializeField] private Transform training;
-    
+    [SerializeField] public TextMeshProUGUI resultFeedback;
     
     public void RunMlDll(TypeModel modelType, TypeTest type, bool isTestingImage, TypeImage image, bool isClassification, int epoch, double alpha, double gamma, bool needTrain)
     {
@@ -150,28 +151,46 @@ public class MlDllRun : MonoBehaviour
                 break;
         }
 
-        //test.Outputs = managedResults;
-        //Affichage des résultats dans la scène principale
-        UpdateVisualResults(test, results, isClassification, false, isTestingImage);
-        
         //Nettoyage !
         MlDllWrapper.DeleteModel(model);
         //MlDllWrapper.DeleteModel(res);
 
         myModel.type = modelType;
         myModel.results = results;
+        
+        //Affichage des résultats dans la scène principale
+        if (isTestingImage)
+            CalculatePercentage(test, results);
+        else
+            UpdateVisualResults(test, results, isClassification, false);
     }
 
-    public void Simulate(TypeModel model, TypeTest type, bool isClassification, bool isTestingImage)
+    public void Simulate(TypeModel model, TypeTest type, bool isClassification)
     {
         var test = new TestClass(type);
-        UpdateVisualResults(test, test.Outputs, isClassification, true, isTestingImage);
+           UpdateVisualResults(test, test.Outputs, isClassification, true);
     }
 
-    private void UpdateVisualResults(TestClass test, double[] results, bool isClassification, bool isSimulation, bool isTestingImage)
+    private void CalculatePercentage(TestClass test, double[] results)
     {
-        if (isTestingImage) return;
+        var sum = 0;
         
+        for (var i = 0; i < results.Length; i++)
+        {
+            var expected = (int)results[i];
+            if (expected == -1) continue;
+            if ((int)test.Outputs[i * test.NbClass + expected] == 1) sum++;
+        }
+
+        float percentage = (float)sum / results.Length * 100;
+        
+        resultFeedback.SetText("Taux de réussite = " + percentage + "%");
+        resultFeedback.gameObject.SetActive(true);
+        Visualizers.GetInstance().HideVisualizers();
+    }
+    
+    private void UpdateVisualResults(TestClass test, double[] results, bool isClassification, bool isSimulation)
+    {
         Pooler.GetInstance().InitializePool();
         _pool = new List<GameObject>(Pooler.GetInstance().GetPoolList());
 

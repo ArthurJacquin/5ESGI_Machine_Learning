@@ -58,7 +58,7 @@ public class TestClass
         int k = 0;
         for (var i = 0; i < images.Count; i++)
         {
-            for (var j = 0; j < images[i].Count; j++)
+            for (var j = 0; j < InputCount; j++)
             {
                 Samples[k] = images[i][j];
                 k++;
@@ -67,15 +67,15 @@ public class TestClass
 
         for (var i = 0; i < SampleCount; ++i)
         {
-            if (realOr3dImage[i] == 1)
+            if (realOr3dImage[i] == 0)
             {
-                Outputs[i * NbClass] = 1; //Première classe => Réelle
-                Outputs[i * NbClass + 1] = 0; //Deuxième classe 
+                Outputs[i * NbClass] = 1;
+                Outputs[i * NbClass + 1] = 0; 
             }
             else
             {
-                Outputs[i * NbClass] = 0; //Première classe => Réelle
-                Outputs[i * NbClass + 1] = 1; //Deuxième classe => 3D
+                Outputs[i * NbClass] = 0;
+                Outputs[i * NbClass + 1] = 1;
             }
         }
     }
@@ -181,43 +181,80 @@ public class TestClass
                 break;
             
             case TypeTest.MultiLinear:
-                SampleCount = 500;
-                Samples = new double[SampleCount * 2];
-
-                for (int i = 0; i < (SampleCount * 2); ++i)
-                {
-                    Samples[i] = Random.Range(0.0f, 1.0f) * 2.0f - 1.0f;
-                }
-
-                Outputs = new double[SampleCount * 3];
-                for (int i = 0; i < SampleCount; ++i)
-                {
-                    if (-(Samples[i * 2]) - Samples[i * 2 + 1] - 0.5 > 0 && Samples[i * 2 + 1] < 0 && Samples[i * 2] - Samples[i * 2 + 1] - 0.5 < 0)
-                    {
-                        Outputs[i * 3] = 1.0;
-                        Outputs[i * 3 + 1] = 0.0;
-                        Outputs[i * 3 + 2] = 0.0;
-                    }
-                    else if (-(Samples[i * 2]) - Samples[i * 2 + 1] - 0.5 < 0 && Samples[i * 2 + 1] > 0 && Samples[i * 2] - Samples[i * 2 + 1] - 0.5 < 0)
-                    {
-                        Outputs[i * 3] = 0.0;
-                        Outputs[i * 3 + 1] = 1.0;
-                        Outputs[i * 3 + 2] = 0.0;
-                    }
-                    else if (-(Samples[i * 2]) - Samples[i * 2 + 1] - 0.5 < 0 && Samples[i * 2 + 1] < 0 && Samples[i * 2] - Samples[i * 2 + 1] - 0.5 > 0)
-                    {
-                        Outputs[i * 3] = 0.0;
-                        Outputs[i * 3 + 1] = 0.0;
-                        Outputs[i * 3 + 2] = 1.0;
-                    }
-                    else
-                    {
-                        Outputs[i * 3] = 0.0;
-                        Outputs[i * 3 + 1] = 0.0;
-                        Outputs[i * 3 + 2] = 0.0;
-                    }
-                }
-
+                SampleCount = 500;
+
+                Samples = new double[SampleCount * 2];
+
+
+
+                for (int i = 0; i < (SampleCount * 2); ++i)
+
+                {
+
+                    Samples[i] = Random.Range(0.0f, 1.0f) * 2.0f - 1.0f;
+
+                }
+
+
+
+                Outputs = new double[SampleCount * 3];
+
+                for (int i = 0; i < SampleCount; ++i)
+
+                {
+
+                    if (-(Samples[i * 2]) - Samples[i * 2 + 1] - 0.5 > 0 && Samples[i * 2 + 1] < 0 && Samples[i * 2] - Samples[i * 2 + 1] - 0.5 < 0)
+
+                    {
+
+                        Outputs[i * 3] = 1.0;
+
+                        Outputs[i * 3 + 1] = 0.0;
+
+                        Outputs[i * 3 + 2] = 0.0;
+
+                    }
+
+                    else if (-(Samples[i * 2]) - Samples[i * 2 + 1] - 0.5 < 0 && Samples[i * 2 + 1] > 0 && Samples[i * 2] - Samples[i * 2 + 1] - 0.5 < 0)
+
+                    {
+
+                        Outputs[i * 3] = 0.0;
+
+                        Outputs[i * 3 + 1] = 1.0;
+
+                        Outputs[i * 3 + 2] = 0.0;
+
+                    }
+
+                    else if (-(Samples[i * 2]) - Samples[i * 2 + 1] - 0.5 < 0 && Samples[i * 2 + 1] < 0 && Samples[i * 2] - Samples[i * 2 + 1] - 0.5 > 0)
+
+                    {
+
+                        Outputs[i * 3] = 0.0;
+
+                        Outputs[i * 3 + 1] = 0.0;
+
+                        Outputs[i * 3 + 2] = 1.0;
+
+                    }
+
+                    else
+
+                    {
+
+                        Outputs[i * 3] = 0.0;
+
+                        Outputs[i * 3 + 1] = 0.0;
+
+                        Outputs[i * 3 + 2] = 0.0;
+
+                    }
+
+                }
+
+
+
                 Infos = new TestInfos()
                 {
                     LayerCount = 2,
@@ -227,37 +264,68 @@ public class TestClass
                 break;
             
             case TypeTest.MultiCross:
-                SampleCount = 1000;
-                Samples = new double[SampleCount * 2];
-
-                for (int i = 0; i < (SampleCount * 2); ++i)
-                {
-                    Samples[i] = Random.Range(0.0f, 1.0f) * 2.0f - 1.0f;
-                }
-
-                Outputs = new double[SampleCount * 3];
-                for (int i = 0; i < SampleCount; ++i)
-                {
-                    if (Mathf.Abs((float)Samples[i * 2] % 0.5f) <= 0.25 && Mathf.Abs((float)Samples[i * 2 + 1] % 0.5f) > 0.25)
-                    {
-                        Outputs[i * 3] = 1.0;
-                        Outputs[i * 3 + 1] = 0.0;
-                        Outputs[i * 3 + 2] = 0.0;
-                    }
-                    else if (Mathf.Abs((float)Samples[i * 2] % 0.5f) > 0.25 && Mathf.Abs((float)Samples[i * 2 + 1] % 0.5f) <= 0.25)
-                    {
-                        Outputs[i * 3] = 0.0;
-                        Outputs[i * 3 + 1] = 1.0;
-                        Outputs[i * 3 + 2] = 0.0;
-                    }
-                    else
-                    {
-                        Outputs[i * 3] = 0.0;
-                        Outputs[i * 3 + 1] = 0.0;
-                        Outputs[i * 3 + 2] = 1.0;
-                    }
-                }
-
+                SampleCount = 1000;
+
+                Samples = new double[SampleCount * 2];
+
+
+
+                for (int i = 0; i < (SampleCount * 2); ++i)
+
+                {
+
+                    Samples[i] = Random.Range(0.0f, 1.0f) * 2.0f - 1.0f;
+
+                }
+
+
+
+                Outputs = new double[SampleCount * 3];
+
+                for (int i = 0; i < SampleCount; ++i)
+
+                {
+
+                    if (Mathf.Abs((float)Samples[i * 2] % 0.5f) <= 0.25 && Mathf.Abs((float)Samples[i * 2 + 1] % 0.5f) > 0.25)
+
+                    {
+
+                        Outputs[i * 3] = 1.0;
+
+                        Outputs[i * 3 + 1] = 0.0;
+
+                        Outputs[i * 3 + 2] = 0.0;
+
+                    }
+
+                    else if (Mathf.Abs((float)Samples[i * 2] % 0.5f) > 0.25 && Mathf.Abs((float)Samples[i * 2 + 1] % 0.5f) <= 0.25)
+
+                    {
+
+                        Outputs[i * 3] = 0.0;
+
+                        Outputs[i * 3 + 1] = 1.0;
+
+                        Outputs[i * 3 + 2] = 0.0;
+
+                    }
+
+                    else
+
+                    {
+
+                        Outputs[i * 3] = 0.0;
+
+                        Outputs[i * 3 + 1] = 0.0;
+
+                        Outputs[i * 3 + 2] = 1.0;
+
+                    }
+
+                }
+
+
+
                 Infos = new TestInfos()
                 {
                     LayerCount = 4,

@@ -88,7 +88,7 @@ namespace Utils
                     break;
             }
             
-            string pathReal = projectFolderPath != "" ? path + "/DataSet_real" : "C:/ESGI/5A_Projets/5ESGI_Machine_Learning/DataSet_Color/DataSet_4x4/DataSet_Real";
+            string pathReal = projectFolderPath != "" ? path + "/DataSet_Real" : "C:/ESGI/5A_Projets/5ESGI_Machine_Learning/DataSet_Color/DataSet_4x4/DataSet_Real";
             Debug.Log("Path for real images dataset : " + pathReal);
             string path3D = projectFolderPath != "" ? path + "/DataSet_3D" : "C:/ESGI/5A_Projets/5ESGI_Machine_Learning/DataSet_Color/DataSet_4x4/DataSet_3D";
             Debug.Log("Path for 3D images dataset : " + path3D);

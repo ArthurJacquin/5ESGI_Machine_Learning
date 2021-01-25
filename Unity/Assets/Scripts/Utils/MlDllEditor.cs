@@ -45,7 +45,7 @@ namespace Utils
             MlDllRun dllRun = (MlDllRun) target;
             if (GUILayout.Button("Simulate training", GUILayout.Width(135), GUILayout.Height(30)))
             {
-                dllRun.Simulate(_modelType, _testType, _isClassification, _isTestingImage);
+                dllRun.Simulate(_modelType, _testType, _isClassification);
             }
         
             if (GUILayout.Button("Training", GUILayout.Width(135), GUILayout.Height(30)))

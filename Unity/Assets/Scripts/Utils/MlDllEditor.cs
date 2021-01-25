@@ -79,6 +79,8 @@ namespace Utils
             if (GUILayout.Button("Load Model", GUILayout.Width(135), GUILayout.Height(30)))
             {
                 ModelData data = SaveSystem.LoadModel();
+                dllRun.myModel.results = data.results;
+                dllRun.myModel.type = data.type;
             }
             EditorGUILayout.EndHorizontal();
             EditorGUILayout.LabelField("", GUI.skin.horizontalSlider);

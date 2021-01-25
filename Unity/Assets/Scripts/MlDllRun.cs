@@ -110,6 +110,10 @@ public class MlDllRun : MonoBehaviour
                 //Création du modèle
                 model = MlDllWrapper.CreateModelRBF(test.Infos.DimensionsRBF, test.Datasize);
 
+                //int size = test.Infos.DimensionsRBF[0] * test.Infos.DimensionsRBF[1] + test.Infos.DimensionsRBF[0] * test.Datasize;
+                //var m = new double[size];
+                //Marshal.Copy(model, m, 0, size);
+
                 if (needTrain)
                 {
                     MlDllWrapper.TrainModelRBF(model, test.Infos.DimensionsRBF, test.Samples, test.SampleCount, test.InputCount,

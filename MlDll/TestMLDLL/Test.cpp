@@ -12,7 +12,8 @@ CasTest::CasTest(TestType t)
 	case Image:
 		datasize = 1;
 		sample_count = 2;
-		samples = new double[sample_count * 16]{ 1, 1, 1, 1, 1, 0.77, 0.77, 1, 1, 0.32, 0.54, 1, 1, 0.54, 0.77, 1, 0.15, 0.15, 0.15, 0, 0, 0.15, 0.15, 0, 0, 0.3, 0.3, 0.15, 0.15, 0.45, 0.45, 0.15 };
+		samples = new double[sample_count * 16]{ 1, 1, 1, 1, 1, 0.77, 0.77, 1, 1, 0.32, 0.54, 1, 1, 0.54, 0.77, 1,
+												0.15, 0.15, 0.15, 0, 0, 0.15, 0.15, 0, 0, 0.3, 0.3, 0.15, 0.15, 0.45, 0.45, 0.15 };
 		outputs = new double[sample_count * 2]{ 0, 1, 1, 0 };
 		break;
 

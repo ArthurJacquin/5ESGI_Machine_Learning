@@ -9,6 +9,7 @@ using Utils;
 public class MlDllRun : MonoBehaviour
 {
     private List<GameObject> _pool;
+    public Model myModel;
     [SerializeField] private Material greenMat;
     [SerializeField] private Material redMat;
     [SerializeField] private Material blueMat;
@@ -16,7 +17,8 @@ public class MlDllRun : MonoBehaviour
     [SerializeField] private Transform simulation;
     [SerializeField] private Transform training;
     
-    public double[] RunMlDll(TypeModel modelType, TypeTest type, bool isTestingImage, TypeImage image, bool isClassification, int epoch, double alpha, double gamma, bool needTrain)
+    
+    public void RunMlDll(TypeModel modelType, TypeTest type, bool isTestingImage, TypeImage image, bool isClassification, int epoch, double alpha, double gamma, bool needTrain)
     {
         //Initialisation des infos du test en fonction de son type
         TestClass test;
@@ -27,8 +29,7 @@ public class MlDllRun : MonoBehaviour
 
             if (allImages.Count <= 0)
             {
-                Debug.LogWarning("No images found. Try to import them first");
-                return new double[0];
+                return;
             }
             
             test = new TestClass(allImages, allValues, image);
@@ -157,7 +158,8 @@ public class MlDllRun : MonoBehaviour
         MlDllWrapper.DeleteModel(model);
         //MlDllWrapper.DeleteModel(res);
 
-        return results;
+        myModel.type = modelType;
+        myModel.results = results;
     }
 
     public void Simulate(TypeModel model, TypeTest type, bool isClassification, bool isTestingImage)

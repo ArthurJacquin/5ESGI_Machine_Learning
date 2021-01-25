@@ -8,8 +8,6 @@ namespace Utils
     [CustomEditor(typeof(MlDllRun))]
     public class MlDllEditor : Editor
     {
-        private Model _model;
-        private double[] _results;
         private TypeModel _modelType;
         private TypeTest _testType;
         private bool _isTestingImage;
@@ -60,7 +58,7 @@ namespace Utils
                 //{
                 //    Debug.Log("Ah bon ? ");
                 //}
-                _results = dllRun.RunMlDll(_modelType, _testType, _isTestingImage, _imageType, _isClassification, _epoch, _alpha, _gamma, _needTraining);
+                dllRun.RunMlDll(_modelType, _testType, _isTestingImage, _imageType, _isClassification, _epoch, _alpha, _gamma, _needTraining);
             }
             EditorGUILayout.EndHorizontal();
             
@@ -70,15 +68,12 @@ namespace Utils
             GUILayout.FlexibleSpace();
             if (GUILayout.Button("Save Model", GUILayout.Width(135), GUILayout.Height(30)))
             {
-                if (_results.Length <= 0)
+                if (dllRun.myModel.results.Length <= 0)
                 {
                     Debug.LogWarning("Trying to save an empty model");
                     return;
                 }
-                
-                _model.type = _modelType;
-                _model.results = _results;
-                SaveSystem.SaveModel(_model, _saveName);
+                SaveSystem.SaveModel(dllRun.myModel, _saveName);
             }
         
             if (GUILayout.Button("Load Model", GUILayout.Width(135), GUILayout.Height(30)))

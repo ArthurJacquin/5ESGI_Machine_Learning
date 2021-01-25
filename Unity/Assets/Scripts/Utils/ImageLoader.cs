@@ -101,7 +101,7 @@ namespace Utils
 
             List<int> valuesReal = Enumerable.Repeat(1, imagesReal.Count).ToList();
             List<int> values3D = Enumerable.Repeat(0, images3D.Count).ToList();
-
+            
             for (var i = 0; i < imagesReal.Count; i++)
             {
                 images.Add(imagesReal[i]);
@@ -166,6 +166,7 @@ namespace Utils
                         {
                             path = filepath[i];
                         }
+                        Debug.Log(path);
                         fileData = File.ReadAllBytes(path);
                         Texture2D tmp = new Texture2D(500, 500, TextureFormat.DXT1, false);
                         tmp.LoadImage(fileData);

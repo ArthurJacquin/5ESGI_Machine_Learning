@@ -212,6 +212,7 @@ namespace Utils
 
         public void InitializeImages()
         {
+            Visualizers.GetInstance().HideVisualizers();
             ClearImages();
             images = new List<List<float>>();
             images3DOrReal = new List<int>();

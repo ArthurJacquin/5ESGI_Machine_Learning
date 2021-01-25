@@ -180,7 +180,9 @@ namespace Utils
                     }
                 }
             }
-        
+
+            fileData = null;
+
             return images;
         }
 
@@ -220,7 +222,7 @@ namespace Utils
             ImportImages();
         }
 
-        public void ClearImages()
+        public static void ClearImages()
         {
             if(images != null)
                 images.Clear();

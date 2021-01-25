@@ -14,6 +14,7 @@ public class MlDllRun : MonoBehaviour
     [SerializeField] private Material greenMat;
     [SerializeField] private Material redMat;
     [SerializeField] private Material blueMat;
+    [SerializeField] private Material magentaMat;
 
     [SerializeField] private Transform simulation;
     [SerializeField] private Transform training;
@@ -49,7 +50,7 @@ public class MlDllRun : MonoBehaviour
         {
             case TypeModel.Linear:
                 //Création du modèle
-                model = MlDllWrapper.CreateModelLinear(test.Datasize, test.NbClass);
+                model = MlDllWrapper.CreateModelLinear(test.InputCount * test.Datasize, test.NbClass);
 
                 if (needTrain)
                 {
@@ -67,7 +68,7 @@ public class MlDllRun : MonoBehaviour
                         sample[j] = test.Samples[id];
                     }
 
-                    res = MlDllWrapper.PredictModelLinear(model, sample, test.Datasize, 
+                    res = MlDllWrapper.PredictModelLinear(model, sample, test.InputCount * test.Datasize, 
                         test.NbClass, isClassification);
 
                     Marshal.Copy(res, managedResults, 0, 1);
@@ -237,7 +238,7 @@ public class MlDllRun : MonoBehaviour
                     else if((int)testSimulation.Outputs[i * testSimulation.NbClass + 2] == 1)
                         _pool[i].GetComponent<Renderer>().material = greenMat;
                     else
-                        _pool[i].GetComponent<Renderer>().material.color = Color.magenta;
+                        _pool[i].GetComponent<Renderer>().material = magentaMat;
                 }
 
                 if (!isSimulation)
@@ -256,7 +257,6 @@ public class MlDllRun : MonoBehaviour
                     else 
                         _pool[j].GetComponent<Renderer>().material.color = Color.magenta;
                 }
-                
             }
         }
         else

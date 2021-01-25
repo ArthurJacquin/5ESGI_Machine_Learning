@@ -55,4 +55,5 @@ MLP::~MLP()
 {
 	delete[] d;
 	delete[] w;
+	delete[] x;
 }

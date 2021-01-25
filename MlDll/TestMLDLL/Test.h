@@ -16,7 +16,8 @@ enum TestType {
 	NonLinearSimple2D,
 	LinearSimple3D,
 	LinearTricky3D,
-	NonLinearSimple3D
+	NonLinearSimple3D,
+	Image
 };
 
 struct CasTest {

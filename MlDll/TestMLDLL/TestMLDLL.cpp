@@ -5,7 +5,7 @@ extern "C"
 {
     //------------------------Modèle linéaire----------------------------------------
     __declspec(dllimport) double* create_linear_model(int inputs_count, int outputCount);
-    __declspec(dllimport) double predict_linear_model(double* model, double samples[], int input_count, int outputCount, bool isClassification);
+    __declspec(dllimport) double* predict_linear_model(double* model, double samples[], int input_count, int outputCount, bool isClassification);
     __declspec(dllimport) void train_linear_model(double* model, double all_samples[], int sample_count, int input_count,
         double all_expected_outputs[], int outputCount, int epochs, double learning_rate, bool isClassification);
     __declspec(dllimport) void delete_model(double* model);
@@ -29,7 +29,7 @@ int main()
     std::cout.precision(5);
     getchar();
 
-    CasTest test(TestType::XORMulticlass);
+    CasTest test(TestType::Image);
     
     test.DisplayInfos();
 
@@ -38,30 +38,50 @@ int main()
     bool isClassification = true;
 
     //-------------------------------------Linear-----------------------------------------
-#if 0
+#if 1
     //Creation du model
     int epoch = 1000;
-    int input_count = 2;
-    int outputSize = 3;
+    int input_count = 16;
+    int outputSize = 2;
     double* model = create_linear_model(input_count, outputSize);
 
     std::cout << "BEFORE !" << std::endl;
     for (size_t i = 0; i < test.sample_count; i ++)
     {
-        std::cout << predict_linear_model(model, new double[2]{ test.samples[i * 2], test.samples[i * 2 + 1] }, input_count, outputSize, isClassification) << std::endl;
+        double* result = predict_linear_model(model, new double[2]{ test.samples[i * 2], test.samples[i * 2 + 1] }, input_count * test.datasize, outputSize, isClassification);
+        if (isClassification)
+            std::cout << " resultat : " << result[0] << std::endl;
+        else
+        {
+            std::cout << " resultat : " << std::endl;
+            for (size_t i = 0; i < outputSize; i++)
+            {
+                std::cout << result[i] << std::endl;
+            }
+        }
     }
 
-    train_linear_model(model, test.samples, test.sample_count, input_count, test.outputs, outputSize, epoch, alpha, isClassification);
+    train_linear_model(model, test.samples, test.sample_count, input_count * test.datasize, test.outputs, outputSize, epoch, learningRate, isClassification);
 
     std::cout << "AFTER !" << std::endl;
     for (size_t i = 0; i < test.sample_count; i++)
     {
-        std::cout << predict_linear_model(model, new double[2]{ test.samples[i * 2], test.samples[i * 2 + 1] }, input_count, outputSize, isClassification) << std::endl;
+        double* result = predict_linear_model(model, new double[2]{ test.samples[i * 2], test.samples[i * 2 + 1] }, input_count * test.datasize, outputSize, isClassification);
+        if (isClassification)
+            std::cout << " resultat : " << result[0] << std::endl;
+        else
+        {
+            std::cout << " resultat : " << std::endl;
+            for (size_t i = 0; i < outputSize; i++)
+            {
+                std::cout << result[i] << std::endl;
+            }
+        }
     }
 #endif
 
     //-------------------------------------MLP-----------------------------------------
-#if 1
+#if 0
     int epoch = 1000;
     int layer_count = 3;
     int* dims = new int[layer_count] { 2, 3, 2 };

@@ -19,10 +19,11 @@ public class MlDllRun : MonoBehaviour
     [SerializeField] private Transform training;
     [SerializeField] public TextMeshProUGUI resultFeedback;
     [SerializeField] public TextMeshProUGUI predictFeedback;
+    [SerializeField] private List<int> dimensionsMLP;
 
-    public void PredictOneImage(TypeModel type, TypeImage imageType, double gamma)
+    public void PredictOneImage(TypeModel type, TypeImage imageType, double gamma, int nbCenter)
     {
-        TestClass test = new TestClass(ImageLoader.GetImageByIndex(0), imageType);
+        TestClass test = new TestClass(ImageLoader.GetImageByIndex(0), imageType, nbCenter, dimensionsMLP);
         IntPtr model = MlDllWrapper.ParseToPointer(myModel.results, myModel.results.Length);
         IntPtr res = new IntPtr();
         double[] managedResults = new double[1] {-1};
@@ -73,7 +74,7 @@ public class MlDllRun : MonoBehaviour
         Visualizers.GetInstance().HideVisualizers();
     }
     
-    public void RunMlDll(TypeModel modelType, TypeTest type, bool isTestingImage, TypeImage image, bool isClassification, int epoch, double alpha, double gamma, bool needTrain)
+    public void RunMlDll(TypeModel modelType, TypeTest type, bool isTestingImage, TypeImage image, bool isClassification, int epoch, double alpha, double gamma, bool needTrain, int nbCenter)
     {
         //Initialisation des infos du test en fonction de son type
         TestClass test;
@@ -87,7 +88,7 @@ public class MlDllRun : MonoBehaviour
                 return;
             }
             
-            test = new TestClass(allImages, allValues, image);
+            test = new TestClass(allImages, allValues, image, nbCenter, dimensionsMLP);
         }
         else
         {

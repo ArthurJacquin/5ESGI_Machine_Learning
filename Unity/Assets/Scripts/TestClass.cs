@@ -40,7 +40,7 @@ public class TestClass
 
     public TestInfos Infos;
 
-    public TestClass(List<float> image, TypeImage type)
+    public TestClass(List<float> image, TypeImage type, int nbCenter, List<int> dimsMLP)
     {
         Infos = new TestInfos();
         SampleCount = 1;
@@ -63,17 +63,23 @@ public class TestClass
         {
             Samples[j] = image[j];
         }
+
+        int[] _dimsMLP = new int[dimsMLP.Count];
+        for (int i = 0; i < dimsMLP.Count; i++)
+        {
+            _dimsMLP[i] = dimsMLP[i];
+        }
         
         Infos = new TestInfos()
         {
             OutputSize = 100,
-            LayerCount = 3,
-            DimensionsMLP = new int[] { 2, 3, 2 },
-            DimensionsRBF = new int[] { 100, 2 }
+            LayerCount = dimsMLP.Count,
+            DimensionsMLP = _dimsMLP,
+            DimensionsRBF = new int[] { nbCenter, 2 }
         };
     }
     
-    public TestClass(List<List<float>> images, List<int> realOr3dImage, TypeImage type)
+    public TestClass(List<List<float>> images, List<int> realOr3dImage, TypeImage type, int nbCenter, List<int> dimsMLP)
     {
         Infos = new TestInfos();
         SampleCount = images.Count; // Nombre d'images => 100 (50 3D + 50 Réelles)
@@ -116,12 +122,18 @@ public class TestClass
             }
         }
 
+        int[] _dimsMLP = new int[dimsMLP.Count];
+        for (int i = 0; i < dimsMLP.Count; i++)
+        {
+            _dimsMLP[i] = dimsMLP[i];
+        }
+
         Infos = new TestInfos()
         {
             OutputSize = 100,
-            LayerCount = 3,
-            DimensionsMLP = new int[] { 2, 3, 2 },
-            DimensionsRBF = new int[] { 100, 2 }
+            LayerCount = dimsMLP.Count,
+            DimensionsMLP = _dimsMLP,
+            DimensionsRBF = new int[] { nbCenter, 2 }
         };
     }
     

@@ -252,7 +252,7 @@ public class MlDllRun : MonoBehaviour
         }
 
         float percentage = (float)sum / results.Length * 100;
-        
+        Debug.Log("Percentage :" + percentage);
         resultFeedback.SetText("Taux de réussite = " + percentage + "%");
         Visualizers.GetInstance().HideVisualizers();
     }

@@ -1,5 +1,6 @@
 ﻿using Crosstales.FB;
 using Save;
+using System.Collections.Generic;
 using UnityEditor;
 using UnityEngine;
 
@@ -18,6 +19,7 @@ namespace Utils
         private double _gamma = 0.1f;
         private bool _needTraining;
         private string _saveName;
+        private int _nbCenters;
 
         public override void OnInspectorGUI()
         {
@@ -31,8 +33,12 @@ namespace Utils
             
             //Variables éditables dans l'inspecteur
             _modelType = (TypeModel) EditorGUILayout.EnumPopup("Type de modèle :", _modelType);
-            _testType = (TypeTest)EditorGUILayout.EnumPopup("Type de test :", _testType);
             _isTestingImage = EditorGUILayout.Toggle("Tester sur des images ? ", _isTestingImage);
+
+            if(_modelType == TypeModel.RBF &&_isTestingImage == true)
+                _nbCenters = EditorGUILayout.IntField("Nombre de centres :", _nbCenters);
+
+            _testType = (TypeTest)EditorGUILayout.EnumPopup("Type de test :", _testType);
             _imageType = (TypeImage) EditorGUILayout.EnumPopup("Type d'images :", _imageType);
             _isClassification = EditorGUILayout.Toggle("Classification activée :", _isClassification);
             _epoch = EditorGUILayout.IntField("Nombre d'itérations :", _epoch);
@@ -58,12 +64,12 @@ namespace Utils
                 //{
                 //    Debug.Log("Ah bon ? ");
                 //}
-                dllRun.RunMlDll(_modelType, _testType, _isTestingImage, _imageType, _isClassification, _epoch, _alpha, _gamma, _needTraining);
+                dllRun.RunMlDll(_modelType, _testType, _isTestingImage, _imageType, _isClassification, _epoch, _alpha, _gamma, _needTraining, _nbCenters);
             }
 
             if (GUILayout.Button("Predict", GUILayout.Width(100), GUILayout.Height(30)))
             {
-                dllRun.PredictOneImage(_modelType, _imageType, _gamma);
+                dllRun.PredictOneImage(_modelType, _imageType, _gamma, _nbCenters);
             }
             EditorGUILayout.EndHorizontal();
             

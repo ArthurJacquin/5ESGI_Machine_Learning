@@ -3,7 +3,6 @@ using System.Collections.Generic;
 using System.Runtime.InteropServices;
 using Save;
 using TMPro;
-using UnityEditor;
 using UnityEngine;
 using Utils;
 
@@ -19,6 +18,60 @@ public class MlDllRun : MonoBehaviour
     [SerializeField] private Transform simulation;
     [SerializeField] private Transform training;
     [SerializeField] public TextMeshProUGUI resultFeedback;
+    [SerializeField] public TextMeshProUGUI predictFeedback;
+
+    public void PredictOneImage(TypeModel type, TypeImage imageType, double gamma)
+    {
+        TestClass test = new TestClass(ImageLoader.GetImageByIndex(0), imageType);
+        IntPtr model = MlDllWrapper.ParseToPointer(myModel.results, myModel.results.Length);
+        IntPtr res = new IntPtr();
+        double[] managedResults = new double[1] {-1};
+        
+        switch (type)
+        {
+            case TypeModel.Linear:
+                res = MlDllWrapper.PredictModelLinear(model, test.Samples, test.InputCount * test.Datasize, 
+                    test.NbClass, true);
+                break;
+            
+            case TypeModel.MLP:
+                res = MlDllWrapper.PredictModelMLP(model, test.Samples, test.Infos.DimensionsMLP,
+                    test.Infos.LayerCount, true);
+                break;
+            
+            case TypeModel.RBF:
+                res = MlDllWrapper.PredictModelRBF(model, test.Infos.DimensionsRBF, test.Samples, test.InputCount,
+                    test.Datasize,
+                    true, gamma);
+                break;
+            
+            default:
+                res = MlDllWrapper.PredictModelLinear(model, test.Samples, test.InputCount * test.Datasize, 
+                    test.NbClass, true);
+                break;
+        }
+
+        Marshal.Copy(res, managedResults, 0, 1);
+        Debug.Log("Image résulat : " + managedResults[0]);
+
+        string text = "L'image est : ";
+        
+        switch ((int)managedResults[0])
+        {
+            case 0:
+                predictFeedback.text = text + "3D";
+                break;
+            case 1:
+                predictFeedback.text = text + "Réelle";
+                break;
+            default:
+                predictFeedback.text = text + "non-déterminée";
+                break;
+        }
+        
+        predictFeedback.transform.parent.gameObject.SetActive(true);
+        Visualizers.GetInstance().HideVisualizers();
+    }
     
     public void RunMlDll(TypeModel modelType, TypeTest type, bool isTestingImage, TypeImage image, bool isClassification, int epoch, double alpha, double gamma, bool needTrain)
     {
@@ -137,18 +190,32 @@ public class MlDllRun : MonoBehaviour
             
             default:
                 //Création du modèle
-                model = MlDllWrapper.CreateModelLinear(test.SampleCount, test.Infos.OutputSize);
-                
+                model = MlDllWrapper.CreateModelLinear(test.InputCount * test.Datasize, test.NbClass);
+
                 if (needTrain)
                 {
-                    //Training
+                    MlDllWrapper.TrainModelLinear(model, test.Samples, test.SampleCount, test.InputCount * test.Datasize,
+                        test.Outputs, test.NbClass, epoch, alpha, isClassification);
                 }
-                
+
                 //Récupération des résultats
-                res = MlDllWrapper.ExportResultMlp(test.SampleCount, test.Samples, test.Outputs, 
-                    test.Infos.LayerCount, test.Infos.DimensionsMLP, test.NodeCount, isClassification, epoch, alpha);
-                
-                Marshal.Copy(res, managedResults, 0, test.Infos.OutputSize);
+                for (int i = 0; i < test.SampleCount; i++)
+                {
+                    double[] sample = new double[test.InputCount * test.Datasize];
+                    for (int j = 0; j < test.InputCount * test.Datasize; j++)
+                    {
+                        int id = i * test.InputCount * test.Datasize + j;
+                        sample[j] = test.Samples[id];
+                    }
+
+                    res = MlDllWrapper.PredictModelLinear(model, sample, test.InputCount * test.Datasize, 
+                        test.NbClass, isClassification);
+
+                    Marshal.Copy(res, managedResults, 0, 1);
+
+                    results[i] = managedResults[0];
+                }
+
                 break;
         }
 
@@ -158,6 +225,7 @@ public class MlDllRun : MonoBehaviour
 
         myModel.type = modelType;
         myModel.results = results;
+        myModel.imageType = image;
         
         //Affichage des résultats dans la scène principale
         if (isTestingImage)
@@ -186,7 +254,6 @@ public class MlDllRun : MonoBehaviour
         float percentage = (float)sum / results.Length * 100;
         
         resultFeedback.SetText("Taux de réussite = " + percentage + "%");
-        resultFeedback.gameObject.SetActive(true);
         Visualizers.GetInstance().HideVisualizers();
     }
     

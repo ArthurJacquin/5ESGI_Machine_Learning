@@ -43,12 +43,12 @@ namespace Utils
             EditorGUILayout.BeginHorizontal();
             GUILayout.FlexibleSpace();
             MlDllRun dllRun = (MlDllRun) target;
-            if (GUILayout.Button("Simulate training", GUILayout.Width(135), GUILayout.Height(30)))
+            if (GUILayout.Button("Simulate training", GUILayout.Width(100), GUILayout.Height(30)))
             {
                 dllRun.Simulate(_modelType, _testType, _isClassification);
             }
         
-            if (GUILayout.Button("Training", GUILayout.Width(135), GUILayout.Height(30)))
+            if (GUILayout.Button("Training", GUILayout.Width(100), GUILayout.Height(30)))
             {
                 //if (_isTestingImage && _imageType != ImageLoader.GetInstance().type)
                 //{
@@ -59,6 +59,11 @@ namespace Utils
                 //    Debug.Log("Ah bon ? ");
                 //}
                 dllRun.RunMlDll(_modelType, _testType, _isTestingImage, _imageType, _isClassification, _epoch, _alpha, _gamma, _needTraining);
+            }
+
+            if (GUILayout.Button("Predict", GUILayout.Width(100), GUILayout.Height(30)))
+            {
+                dllRun.PredictOneImage(_modelType, _imageType, _gamma);
             }
             EditorGUILayout.EndHorizontal();
             
@@ -81,6 +86,7 @@ namespace Utils
                 ModelData data = SaveSystem.LoadModel();
                 dllRun.myModel.results = data.results;
                 dllRun.myModel.type = data.type;
+                dllRun.myModel.imageType = data.imageType;
             }
             EditorGUILayout.EndHorizontal();
             EditorGUILayout.LabelField("", GUI.skin.horizontalSlider);

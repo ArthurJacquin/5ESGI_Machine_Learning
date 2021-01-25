@@ -51,6 +51,9 @@ public static class MlDllWrapper
     
     
     //----------------------------------------------------------------------------
+
+    [DllImport("MlDll", EntryPoint = "parseToPointer")]
+    public static extern System.IntPtr ParseToPointer(double[] results, int resultsSize);
     
     [DllImport("MlDll", EntryPoint = "delete_model")]
     public static extern void DeleteModel(System.IntPtr model);

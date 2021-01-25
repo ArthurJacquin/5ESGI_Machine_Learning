@@ -40,6 +40,39 @@ public class TestClass
 
     public TestInfos Infos;
 
+    public TestClass(List<float> image, TypeImage type)
+    {
+        Infos = new TestInfos();
+        SampleCount = 1;
+        InputCount = image.Count;
+        
+        if (type == TypeImage.Color || type == TypeImage.Color4X4 || type == TypeImage.Color16X16)
+        {
+            InputCount /= 3;
+            Datasize = 3;
+        }
+        else
+        {
+            Datasize = 1;
+        }
+
+        NbClass = 2;
+        
+        Samples = new double[SampleCount * InputCount * Datasize];
+        for (var j = 0; j < Samples.Length; j++)
+        {
+            Samples[j] = image[j];
+        }
+        
+        Infos = new TestInfos()
+        {
+            OutputSize = 100,
+            LayerCount = 3,
+            DimensionsMLP = new int[] { 2, 3, 2 },
+            DimensionsRBF = new int[] { 100, 2 }
+        };
+    }
+    
     public TestClass(List<List<float>> images, List<int> realOr3dImage, TypeImage type)
     {
         Infos = new TestInfos();

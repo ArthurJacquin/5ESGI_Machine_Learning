@@ -1,4 +1,5 @@
 ﻿using UnityEngine;
+using Utils;
 
 namespace Save
 {
@@ -13,5 +14,6 @@ namespace Save
    {
       public double[] results;
       public TypeModel type;
+      public TypeImage imageType;
    }
 }

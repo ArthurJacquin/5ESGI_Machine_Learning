@@ -113,11 +113,11 @@ public class TestClass
             if (realOr3dImage[i] == 0)
             {
                 Outputs[i * NbClass] = 1;
-                Outputs[i * NbClass + 1] = 0; 
+                Outputs[i * NbClass + 1] = -1; 
             }
             else
             {
-                Outputs[i * NbClass] = 0;
+                Outputs[i * NbClass] = -1;
                 Outputs[i * NbClass + 1] = 1;
             }
         }

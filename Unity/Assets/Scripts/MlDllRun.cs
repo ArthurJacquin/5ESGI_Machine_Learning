@@ -53,7 +53,7 @@ public class MlDllRun : MonoBehaviour
 
                 if (needTrain)
                 {
-                    MlDllWrapper.TrainModelLinear(model, test.Samples, test.SampleCount, test.Datasize,
+                    MlDllWrapper.TrainModelLinear(model, test.Samples, test.SampleCount, test.InputCount * test.Datasize,
                         test.Outputs, test.NbClass, epoch, alpha, isClassification);
                 }
 
@@ -153,7 +153,7 @@ public class MlDllRun : MonoBehaviour
 
         //Nettoyage !
         MlDllWrapper.DeleteModel(model);
-        //MlDllWrapper.DeleteModel(res);
+        MlDllWrapper.DeleteModel(res);
 
         myModel.type = modelType;
         myModel.results = results;
@@ -247,27 +247,14 @@ public class MlDllRun : MonoBehaviour
                     _pool[j].transform.position = training.position + new Vector3((float)test.Samples[i * 2],(float)test.Samples[i * 2 + 1], 0.0f);
                     _pool[j].SetActive(true);
 
-                    if (test.NbClass < 3)
-                    {
-                        //testSimulation.Outputs = { 0, 1, 1, 0} ;
-                        if((int)test.Outputs[i * test.NbClass] == 1)
-                            _pool[j].GetComponent<Renderer>().material = blueMat;
-                        else if((int)test.Outputs[i * test.NbClass + 1] == 1)
-                            _pool[j].GetComponent<Renderer>().material = redMat;
-                        else 
-                            _pool[j].GetComponent<Renderer>().material.color = Color.magenta;
-                    }
-                    else
-                    {
-                        if((int)test.Outputs[i * test.NbClass] == 1)
-                            _pool[j].GetComponent<Renderer>().material = blueMat;
-                        else if((int)test.Outputs[i * test.NbClass + 1] == 1)
-                            _pool[j].GetComponent<Renderer>().material = redMat;
-                        else if((int)test.Outputs[i * test.NbClass + 2] == 1)
-                            _pool[j].GetComponent<Renderer>().material = greenMat;
-                        else
-                            _pool[j].GetComponent<Renderer>().material.color = Color.magenta;
-                    }
+                    if(results[i] == 0)
+                        _pool[j].GetComponent<Renderer>().material = blueMat;
+                    else if(results[i] == 1)
+                        _pool[j].GetComponent<Renderer>().material = redMat;
+                    else if(results[i] == 2)
+                        _pool[j].GetComponent<Renderer>().material = greenMat;
+                    else 
+                        _pool[j].GetComponent<Renderer>().material.color = Color.magenta;
                 }
                 
             }

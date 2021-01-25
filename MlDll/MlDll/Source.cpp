@@ -83,7 +83,7 @@ double* getOutput(double* outputTest, int outputSize, bool isClassification)
 
 		printArray(outputTest, outputSize, 1, "outputs");
 		//Si le maximum est trop petit -> appartient a aucune classe
-		if (max < 0.6)
+		if (max < 0.2)
 			return new double[1]{ -1.0 };
 
 		return new double[1]{ double(id) };

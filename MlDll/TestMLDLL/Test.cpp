@@ -11,13 +11,13 @@ CasTest::CasTest(TestType t)
 	{
 	case LinearSimple:
 		sample_count = 3;
-		samples = new double[sample_count * datasize]{ 1.0, 1.0, 2.0, 3.0, 3.0, 3.0 };
+		samples = new double[sample_count * datasize] { 1.0, 1.0, 2.0, 3.0, 3.0, 3.0 };
 		outputs = new double[sample_count * datasize] { 1, -1, -1 };
 		break;
 
 	case LinearSimpleMulticlass:
 		sample_count = 3;
-		samples = new double[sample_count * datasize]{ 1.0, 1.0, 2.0, 3.0, 3.0, 3.0 };
+		samples = new double[sample_count * datasize] { 1.0, 1.0, 2.0, 3.0, 3.0, 3.0 };
 		outputs = new double[sample_count * datasize] { 1, 0, 0, 1, 0, 1 };
 		break;
 
@@ -43,9 +43,9 @@ CasTest::CasTest(TestType t)
 		break;
 
 	case LinearMultipleMulticlass:
-		sample_count = 200;
-		samples = new double[sample_count];
-		for (size_t i = 0; i < sample_count; i++)
+		sample_count = 100;
+		samples = new double[sample_count * 2];
+		for (size_t i = 0; i < sample_count * 2; i++)
 		{
 			if (i < 100)
 				samples[i] = rand() / (double)RAND_MAX + 1.0;
@@ -56,7 +56,7 @@ CasTest::CasTest(TestType t)
 		outputs = new double[sample_count * 2];
 		for (size_t i = 0; i < sample_count; i++)
 		{
-			if (i < 100)
+			if (i < 50)
 			{
 				outputs[i * 2] = 1.0;
 				outputs[i * 2 + 1] = 0.0;
@@ -71,13 +71,13 @@ CasTest::CasTest(TestType t)
 
 	case XOR:
 		sample_count = 4;
-		samples = new double[sample_count * 2]{ 1.0, 0.0, 0.0, 1.0, 0.0, 0.0, 1.0, 1.0 };
+		samples = new double[sample_count * 2] { 1.0, 0.0, 0.0, 1.0, 0.0, 0.0, 1.0, 1.0 };
 		outputs = new double[sample_count] { 1, 1, -1, -1 };
 		break;
 
 	case XORMulticlass:
 		sample_count = 4;
-		samples = new double[sample_count * datasize]{ 1.0, 0.0, 0.0, 1.0, 0.0, 0.0, 1.0, 1.0 };
+		samples = new double[sample_count * datasize] { 1.0, 0.0, 0.0, 1.0, 0.0, 0.0, 1.0, 1.0 };
 		outputs = new double[sample_count * datasize] { 1, 0, 1, 0, 0, 1, 0, 1 };
 		break;
 
@@ -162,65 +162,66 @@ CasTest::CasTest(TestType t)
 		break;
 
 	case MultiCross:
-		/*sample_count = 1000;
+		sample_count = 10;
 		samples = new double[sample_count * 2];
+
 		for (size_t i = 0; i < (sample_count * 2); i++)
 		{
 			samples[i] = rand() / (double)RAND_MAX * 2.0 - 1.0;
 		}
 
-		outputs = new double[sample_count];
+		outputs = new double[sample_count * 3];
 		for (size_t i = 0; i < sample_count; i++)
 		{
-			if (abs(samples[i * 2] % 0.5) <= 0.25 && abs(samples[i * 2 + 1] % 0.5) > 0.25)
+			if (std::abs(std::fmod(samples[i * 2], 0.5)) <= 0.25 && std::abs(std::fmod(samples[i * 2 + 1], 0.5)) > 0.25)
 			{
-				outputs[i] = 1.0;
-				outputs[i + 1] = 0.0;
-				outputs[i + 2] = 0.0;
+				outputs[i * 3] = 1.0;
+				outputs[i * 3 + 1] = 0.0;
+				outputs[i * 3 + 2] = 0.0;
 			}
-			else if (abs(samples[i * 2] % 0.5) > 0.25 && abs(samples[i * 2 + 1] % 0.5) <= 0.25)
+			else if (std::abs(std::fmod(samples[i * 2], 0.5)) > 0.25 && std::abs(std::fmod(samples[i * 2 + 1], 0.5)) <= 0.25)
 			{
-				outputs[i] = 0.0;
-				outputs[i + 1] = 1.0;
-				outputs[i + 2] = 0.0;
+				outputs[i * 3] = 0.0;
+				outputs[i * 3 + 1] = 1.0;
+				outputs[i * 3 + 2] = 0.0;
 			}
 			else
 			{
-				outputs[i] = 0.0;
-				outputs[i + 1] = 0.0;
-				outputs[i + 2] = 1.0;
+				outputs[i * 3] = 0.0;
+				outputs[i * 3 + 1] = 0.0;
+				outputs[i * 3 + 2] = 1.0;
 			}
-		}*/
+		}
 		break;
 
 	case LinearSimple2D:
 		sample_count = 1;
-		samples = new double[sample_count * datasize]{ 1.0, 2.0 };
+		samples = new double[sample_count * datasize] { 1.0, 2.0 };
 		outputs = new double[sample_count * datasize] { 2, 3 };
 		break;
 
 	case NonLinearSimple2D:
 		sample_count = 1;
 		datasize = 3;
-		samples = new double[sample_count * datasize]{ 1.0, 2.0, 3.0 };
+		samples = new double[sample_count * datasize] { 1.0, 2.0, 3.0 };
 		outputs = new double[sample_count * datasize] { 2, 3, 2.5 };
 		break;
 
 	case LinearSimple3D:
 		sample_count = 3;
-		samples = new double[sample_count * 2]{ 1.0, 1.0, 2.0, 2.0, 3.0, 1.0 };
+		samples = new double[sample_count * 2] { 1.0, 1.0, 2.0, 2.0, 3.0, 1.0 };
 		outputs = new double[sample_count] { 2, 3, 2.5 };
 		break;
 
 	case LinearTricky3D:
 		sample_count = 3;
-		samples = new double[sample_count * 2]{ 1.0, 1.0, 2.0, 2.0, 3.0, 3.0 };
+		samples = new double[sample_count * 2] { 1.0, 1.0, 2.0, 2.0, 3.0, 3.0 };
 		outputs = new double[sample_count] { 1, 2, 3 };
 		break;
 
 	case NonLinearSimple3D:
 		sample_count = 4;
-		samples = new double[sample_count * 2]{ 1.0, 0.0, 0.0, 1.0, 1.0, 1.0, 0.0, 0.0 };
+		samples = new double[sample_count * 2] { 1.0, 0.0, 0.0, 1.0, 1.0, 1.0, 0.0, 0.0 };
 		outputs = new double[sample_count] { 2, 1, -2, -1 };
 		break;
 

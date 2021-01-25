@@ -108,7 +108,7 @@ namespace Crosstales.FB
         /// <returns>Returns a string of the chosen file. Empty string when cancelled</returns>
         public static string OpenSingleFile(string extension = "*")
         {
-            string[] extensions = { "fun" };
+            string[] extensions = { "fun", "png", "jpg" };
             return OpenSingleFile(Util.Constants.TEXT_OPEN_FILE, string.Empty, getFilter(extensions));
         }
 

@@ -1,6 +1,7 @@
 ﻿using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using Crosstales.FB;
 using UnityEngine;
 
 namespace Utils
@@ -23,6 +24,7 @@ namespace Utils
         public bool updateEditor;
         public string projectFolderPath;
         public TypeImage type;
+        public bool testOneImage;
         public bool loadAllImages;
         public int nbImagesToLoad;
         public bool loadRandomImages;
@@ -59,6 +61,25 @@ namespace Utils
                 Visualizers.GetInstance().HideVisualizers();
         }
 
+        private void ChooseOneImage()
+        {
+            if (visualize)
+                visualizers = Visualizers.GetInstance().GetPoolList();
+
+            string path = FileBrowser.OpenSingleFile();
+
+            byte[] fileData = File.ReadAllBytes(path);
+            Texture2D tmp = new Texture2D(500, 500, TextureFormat.DXT1, false);
+            tmp.LoadImage(fileData);
+
+            Debug.Log("Image chosen : " + path);
+            
+            if (visualize)
+                visualizers[0].ApplyTexture(tmp);
+
+            images.Add(ConvertTexture2DIntoFloatList(tmp));
+        }
+        
         private void ImportImages()
         {
             if (visualize)
@@ -218,8 +239,11 @@ namespace Utils
             ClearImages();
             images = new List<List<float>>();
             images3DOrReal = new List<int>();
-        
-            ImportImages();
+
+            if (testOneImage)
+                ChooseOneImage();
+            else
+                ImportImages();
         }
 
         public static void ClearImages()
